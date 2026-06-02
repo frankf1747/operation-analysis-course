@@ -26,8 +26,8 @@ def make_sidebar(current_week):
         ('crash.html', '🚨 Night Before Exam', '🚨 考前一晚', None),
     ]
     lines = ['<aside class="sidebar">', '<h1>MGMTMSA 408</h1>',
-             '<p class="subtitle">Operations Analytics — Final Review</p>', '<nav>']
-    for href, label, w in items:
+             '<p class="subtitle" data-en="Operations Analytics — Final Review" data-zh="运营分析 — 期末复习">Operations Analytics — Final Review</p>', '<nav>']
+    for href, label_en, label_zh, w in items:
         cls = ' class="active"' if w == current_week else ''
         en_attr = html.escape(label_en, quote=True)
         zh_attr = html.escape(label_zh, quote=True)
