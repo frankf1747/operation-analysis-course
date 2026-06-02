@@ -11,7 +11,11 @@ function initChecklists() {
 
 // ====== Page detection ======
 function getCurrentFile() {
-  return (window.location.pathname.split('/').pop() || 'index.html');
+  // Netlify "Pretty URLs" strips .html; re-add it so regex/string checks below
+  // work whether the URL is /week1 or /week1.html.
+  let f = window.location.pathname.split('/').pop() || 'index.html';
+  if (f && !f.endsWith('.html')) f += '.html';
+  return f;
 }
 
 function isWeekPage() {
@@ -38,6 +42,7 @@ function injectLangToggle() {
     if (isWeekPage()) {
       // Toggle clicks DO need to fire the event so content swaps
       applyWeekLang(next, true);
+      adjustSidebarLinks(next);
       btn.querySelector('.lang-label').textContent = (next === 'en') ? '中文' : 'English';
     } else {
       const file = getCurrentFile();
