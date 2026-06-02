@@ -36,7 +36,8 @@ function injectLangToggle() {
     localStorage.setItem('site_lang', next);
 
     if (isWeekPage()) {
-      applyWeekLang(next);
+      // Toggle clicks DO need to fire the event so content swaps
+      applyWeekLang(next, true);
       btn.querySelector('.lang-label').textContent = (next === 'en') ? '中文' : 'English';
     } else {
       const file = getCurrentFile();
@@ -51,9 +52,11 @@ function injectLangToggle() {
   });
 }
 
-function applyWeekLang(lang) {
+function applyWeekLang(lang, fireEvent) {
   document.documentElement.lang = (lang === 'zh') ? 'zh-CN' : 'en';
-  window.dispatchEvent(new CustomEvent('langchange', { detail: lang }));
+  if (fireEvent) {
+    window.dispatchEvent(new CustomEvent('langchange', { detail: lang }));
+  }
 }
 
 function syncLangOnLoad() {
@@ -61,7 +64,8 @@ function syncLangOnLoad() {
   const file = getCurrentFile();
 
   if (isWeekPage()) {
-    applyWeekLang(savedLang);
+    // Don't fire langchange — the inline script in the week page already rendered initial content
+    applyWeekLang(savedLang, false);
     return;
   }
 

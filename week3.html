@@ -413,153 +413,153 @@ The regression tree leaf VALUES minimize squared error (predict the mean). The n
 2. For each "region" (tree leaf), compute the $(p-c)/p$ EMPIRICAL QUANTILE of demands in that region.
 3. For new context $x$: find which region $x$ falls into → use that quantile as $Q^*(x)$.
 </script>
-<script id="md-zh" type="text/markdown"># 第3周 — 报童问题
+<script id="md-zh" type="text/markdown"># 第三周 —— 报童问题 Newsvendor Problem
 
-## 0. 全局视角
+## 0. 总览
 
-一个报童以成本 $c$ 购买今日报纸，以价格 $p$ 出售。**订购过少 → 失去销售。订购过多 → 未售出（天尾时无价值）。** 这种易腐烂库存折衷适用于面包店、时尚、航空公司（超额预订）、季节性商品和任何易腐烂商品。
+报童以成本 $c$ 购入当天的报纸,以价格 $p$ 出售。**订得太少 → 失去销售机会。订得太多 → 卖不出去(当日结束时一文不值)。** 这种易腐库存的权衡适用于面包店、时尚行业、航空公司(超额预订)、季节性商品以及任何易腐商品。
 
-## 1. 数学设置
+## 1. 数学建模
 
-- 随机需求 $D$，分布为 $F$
-- 订购量 $Q$（在观测 $D$ 之前选择）
-- 成本 $c$、售价 $p$、残值 $s$（通常为 0）
+- 随机需求 $D$,分布为 $F$
+- 订货量 $Q$(在观测到 $D$ 之前选择)
+- 成本 $c$,售价 $p$,残值 $s$(通常为 0)
 
-**单次实现的利润：**
+**单次实现的利润:**
 $$\pi(Q,D) = p \min(Q,D) + s(Q-D)^+ - cQ$$
 
-当 $s = 0$ 时：$\pi = p \min(Q,D) - cQ$。
+当 $s = 0$ 时:$\pi = p \min(Q,D) - cQ$。
 
-## 2. 两种等价表述
+## 2. 两种等价的表述方式
 
 ### 基于利润
 $$\max_Q E[p \min(Q,D) - cQ]$$
 
-### 基于成本（缺货成本 & 过剩成本）
+### 基于成本(缺货成本 & 过剩成本)
 $$\min_Q E[c_u(D-Q)^+ + c_o(Q-D)^+]$$
-- $c_u = p - c$（缺货 — 每单位未满足的机会成本）
-- $c_o = c - s$（过剩 — 每单位未售出的净成本）
+- $c_u = p - c$(缺货成本 —— 每单位未满足需求的机会成本)
+- $c_o = c - s$(过剩成本 —— 每单位未售出商品的净成本)
 
-等价原因：利润 $= (p-c) E[D] - E[c_u(D-Q)^+ + c_o(Q-D)^+]$。第一项在 $Q$ 中为常数。
+为何等价:利润 $= (p-c) E[D] - E[c_u(D-Q)^+ + c_o(Q-D)^+]$。第一项关于 $Q$ 是常数。
 
-## 3. 临界分位数 — 推导
+## 3. 临界分位数 —— 推导
 
 ### 边际分析
-从 $Q$ 变为 $Q+1$：
-- 如果 $D > Q$：获得 $c_u$（概率 $P(D > Q)$）
-- 如果 $D \le Q$：失去 $c_o$（概率 $P(D \le Q)$）
+从 $Q$ 增加到 $Q+1$:
+- 若 $D > Q$:获得 $c_u$(概率为 $P(D > Q)$)
+- 若 $D \le Q$:损失 $c_o$(概率为 $P(D \le Q)$)
 
-设边际收益 = 0：
+令边际收益 = 0:
 $$c_u(1 - F(Q^*)) = c_o F(Q^*)$$
 $$F(Q^*) = \frac{c_u}{c_u + c_o}$$
 
-**等价基于利润的形式（当 $s = 0$ 时）：** $F(Q^*) = (p-c)/p$。
+**基于利润的等价形式(当 $s = 0$ 时):** $F(Q^*) = (p-c)/p$。
 
 ### 微积分推导
-$G(Q) = pE[\min(Q,D)] - cQ$。导数：
+$G(Q) = pE[\min(Q,D)] - cQ$。求导:
 $$G'(Q) = p(1 - F(Q)) - c = 0 \Rightarrow F(Q^*) = \frac{p-c}{p}$$
 
-**直观理解：** 希望缺货概率 = $c/p$。薄利（高 $c/p$）→ 库存少。
+**直觉理解:** 希望缺货概率 = $c/p$。利润率薄(高 $c/p$)→ 少备货。
 
-## 4. 分布 — CDF反演
+## 4. 分布 —— CDF 反演
 
 ### 均匀分布 $U[a,b]$
-$F(x) = (x-a)/(b-a)$, $Q^* = a + \alpha(b-a)$。
+$F(x) = (x-a)/(b-a)$,$Q^* = a + \alpha(b-a)$。
 
-**示例：** $U[20,80]$, $p=12, c=4, s=2$ → $c_u=8, c_o=2, \alpha=0.8$. $Q^* = 20 + 0.8(60) = 68$。
+**例:** $U[20,80]$,$p=12, c=4, s=2$ → $c_u=8, c_o=2, \alpha=0.8$。$Q^* = 20 + 0.8(60) = 68$。
 
-### 三角分布 Tr$[a, b, c]$（低、众数、高）
-**概率密度函数：**
+### 三角分布 Tr$[a, b, c]$(下限,众数,上限)
+**PDF:**
 $$f(x) = \begin{cases} \frac{2(x-a)}{(b-a)(c-a)} & a \le x \le b \\ \frac{2(c-x)}{(c-b)(c-a)} & b < x \le c \end{cases}$$
 
-**CDF：**
+**CDF:**
 $$F(x) = \begin{cases} \frac{(x-a)^2}{(b-a)(c-a)} & x \le b \\ 1 - \frac{(c-x)^2}{(c-b)(c-a)} & x > b \end{cases}$$
 
-**反函数：**
-- 如果 $\alpha \le F(b)$：$Q^* = a + \sqrt{\alpha(b-a)(c-a)}$
-- 如果 $\alpha > F(b)$：$Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$
+**反函数:**
+- 若 $\alpha \le F(b)$:$Q^* = a + \sqrt{\alpha(b-a)(c-a)}$
+- 若 $\alpha > F(b)$:$Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$
 
-**示例：** Tr[100, 150, 300], $p=4, c=1, s=0 \Rightarrow \alpha = 0.75$。$F(150) = 50/200 = 0.25$。因为 $0.75 > 0.25$，使用上分支：
+**例:** Tr[100, 150, 300],$p=4, c=1, s=0 \Rightarrow \alpha = 0.75$。$F(150) = 50/200 = 0.25$。由于 $0.75 > 0.25$,使用上分支:
 $$Q^* = 300 - \sqrt{0.25 \cdot 150 \cdot 200} = 300 - 86.6 = 213$$
 
 ### 正态分布 $N(\mu, \sigma^2)$
 $Q^* = \mu + z_\alpha \cdot \sigma$。当 $\alpha < 0.5$ 时 $z_\alpha < 0$。
 
-标准 $z$ 值：$z_{0.5}=0, z_{0.75}=0.674, z_{0.9}=1.282, z_{0.95}=1.645$。
+标准 $z$ 值:$z_{0.5}=0, z_{0.75}=0.674, z_{0.9}=1.282, z_{0.95}=1.645$。
 
-**示例：** $N(500, 100^2), p=100, c=60, \alpha=0.4, z_{0.4}=-0.253$。$Q^* = 500 - 25 = 475$。
+**例:** $N(500, 100^2), p=100, c=60, \alpha=0.4, z_{0.4}=-0.253$。$Q^* = 500 - 25 = 475$。
 
 ### 指数分布 Exp($\lambda$)
-$F(x) = 1 - e^{-\lambda x}$, $Q^* = -\ln(1-\alpha)/\lambda$。
+$F(x) = 1 - e^{-\lambda x}$,$Q^* = -\ln(1-\alpha)/\lambda$。
 
-## 5. 基本报童问题笔记本
+## 5. 基本报童问题 Notebook
 
-**单元 1-2：** 从 $N(500, 100^2)$ 模拟 1000 个需求。
+**Cell 1-2:** 从 $N(500, 100^2)$ 模拟 1000 个需求。
 
-**单元 3：** 对于每个 $Q = 1, 2, ..., 999$：
+**Cell 3:** 对每个 $Q = 1, 2, ..., 999$:
 ```python
 profits = [p*min(Q,d) - c*Q for d in demand_data]
 expected_profit.append(np.mean(profits))
 ```
 
-**单元 6-7：** 绘制期望利润与 Q → 凹倒抛物线。
+**Cell 6-7:** 绘制 expected_profit vs Q → 凹形倒抛物线。
 
-**单元 8-10：**
+**Cell 8-10:**
 ```python
 optimal_Q = expected_profit.argmax()
 empirical_stockout = sum(d > optimal_Q for d in demand_data) / 1000
 ```
 
-**单元 11：** 验证理论：`1 - stats.norm.cdf(optimal_Q, mu, sigma)`。
+**Cell 11:** 与理论对比验证:`1 - stats.norm.cdf(optimal_Q, mu, sigma)`。
 
-**单元 18：** 跳过网格搜索 — 直接使用：
+**Cell 18:** 跳过网格搜索 —— 直接使用:
 ```python
 nv_quantile = (p-c)/p
 optimal_Q = np.quantile(demand_data, nv_quantile)
 ```
 
-## 6. 样本平均（经验）报童问题
+## 6. 样本均值(经验)报童问题
 
-给定历史需求 $d_1, \ldots, d_n$：
+给定历史需求 $d_1, \ldots, d_n$:
 1. 计算 $\alpha = (p-c)/p$
-2. 排序需求
-3. $Q^* = d_{(\lceil n\alpha \rceil)}$（第 $\lceil n\alpha \rceil$ 个最小值）
+2. 对需求排序
+3. $Q^* = d_{(\lceil n\alpha \rceil)}$(第 $\lceil n\alpha \rceil$ 小的值)
 
-**示例：** 10 个需求 [45,52,48,61,55,49,58,51,46,60]。$\alpha=0.8$, $\lceil 8 \rceil = 8$。排序：[45,46,48,49,51,52,55,58,60,61]。$Q^* = 58$。
+**例:** 10 个需求 [45,52,48,61,55,49,58,51,46,60]。$\alpha=0.8$,$\lceil 8 \rceil = 8$。排序后:[45,46,48,49,51,52,55,58,60,61]。$Q^* = 58$。
 
-## 7. 背景变量报童问题 — 全局视角
+## 7. 背景变量报童问题 —— 总览
 
-需求取决于特征 $X$（天气、日期、位置）。想要 $Q^*(X)$ — 作为背景函数的订购量。
+需求依赖于特征 $X$(天气、日期、地点)。希望得到 $Q^*(X)$ —— 作为背景变量函数的订货量。
 
-两种方法：
-- **回归树**（非参数，将特征空间分割成叶子）
-- **线性回归**（参数，假设 $D|X \sim$ 正态）
+两种方法:
+- **回归树**(非参数方法,将特征空间划分为叶节点)
+- **线性回归**(参数方法,假设 $D|X \sim$ 正态分布)
 
 ## 8. 回归树方法
 
-1. 在训练数据 $(x_i, d_i)$ 上拟合树。
-2. 对每个叶子 $\ell$：收集叶子中样本的需求，计算 $\alpha$ 分位数。
-3. 新的 $x$ → 沿树下降找到叶子 → 使用该叶子的 $Q^*$。
+1. 在训练数据 $(x_i, d_i)$ 上拟合回归树。
+2. 对每个叶节点 $\ell$:收集 $\ell$ 中样本的需求,计算 $\alpha$-分位数。
+3. 新样本 $x$ → 沿树下落找到叶节点 → 使用该叶节点的 $Q^*$。
 
 ## 9. 线性回归方法
 
 假设 $D | X \sim N(\beta_0 + \beta_1 X_1 + \ldots + \beta_k X_k, \sigma^2)$。
 
-1. 拟合线性回归 → 获得 $\hat\beta$ 和 $\hat\sigma$
-2. 对新的 $x$：$\hat\mu(x) = \hat\beta_0 + \sum \hat\beta_i x_i$
+1. 拟合线性回归 → 得到 $\hat\beta$ 和 $\hat\sigma$。
+2. 对新样本 $x$:$\hat\mu(x) = \hat\beta_0 + \sum \hat\beta_i x_i$
 3. $Q^*(x) = \hat\mu(x) + z_\alpha \cdot \hat\sigma$
 
-**示例：** $\hat\mu = 50 + 2T - 15W$, $\hat\sigma = 20$, $\alpha = 0.4$。明天 $T=85, W=0$ → $\hat\mu = 220$。$z_{0.4} = -0.253$。$Q^* = 220 - 5 = 215$。
+**例:** $\hat\mu = 50 + 2T - 15W$,$\hat\sigma = 20$,$\alpha = 0.4$。明天 $T=85, W=0$ → $\hat\mu = 220$。$z_{0.4} = -0.253$。$Q^* = 220 - 5 = 215$。
 
-## 10. 橙汁笔记本 — 完整演练
+## 10. 橙汁 Notebook —— 完整演练
 
-**单元 2-3：** 加载含人口统计特征（收入、教育、年龄等）和需求的 OJ 数据。
+**Cell 2-3:** 加载橙汁数据,包含人口统计特征(收入、教育、年龄等)和需求。
 
-**单元 5：** 50/50 训练-测试分割。
+**Cell 5:** 训练-测试集划分 50/50。
 
-**单元 7：** 拟合 `DecisionTreeRegressor(max_depth=2)` → 3-4 个叶子。
+**Cell 7:** 拟合 `DecisionTreeRegressor(max_depth=2)` → 3-4 个叶节点。
 
-**单元 21-25：**
+**Cell 21-25:**
 ```python
 p, c = 3.00, 2.10
 nv_quantile = (p-c)/p  # = 0.30
@@ -570,85 +570,85 @@ for leaf in leaves:
     leaf_to_quantile[leaf] = np.quantile(demands_in_leaf, nv_quantile)
 ```
 
-**单元 29-30：** 样本外评估：
+**Cell 29-30:** 样本外评估:
 ```python
 test_leaves = oj_tree.apply(X_test)
 test_orders = leaf_to_quantile[test_leaves]
 test_profit = p * np.minimum(test_orders, y_test) - c * test_orders
-# 背景平均约 $4028/周
+# 背景变量方法平均 ≈ $4028/周
 ```
 
-**单元 31-32：** 非背景基准（所有商店单一 Q）约 $3932/周。背景增益约 2.4%。
+**Cell 31-32:** 非背景变量基线(所有门店统一 Q)≈ $3932/周。背景变量收益 ≈ 2.4%。
 
 ## 11. 期望利润计算
 
 $$E[\pi(Q^*, D)] = pE[\min(Q^*, D)] - cQ^*$$
 
-其中：
+其中:
 $$E[\min(Q^*, D)] = \int_0^{Q^*} x f(x) dx + Q^* [1 - F(Q^*)]$$
 
-替代方式：$G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$。
+替代形式:$G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$。
 
-**工作示例（咖啡、均匀）：** $Q^* = 68$, $E[\pi^*] = $352。完整利润：
+**详细例题(咖啡,均匀分布):** $Q^* = 68$,$E[\pi^*] = $352。完整利润:
 $$\pi^* = pE[D] - E[\text{损失}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
 
-## 12. 逐步模板
+## 12. 分步模板
 
 ### (a) 已知分布
 1. 计算 $\alpha = (p-c)/p$ 或 $c_u/(c_u+c_o)$
-2. 反演 CDF：$Q^* = F^{-1}(\alpha)$
-3. （可选）计算期望利润
+2. 反演 CDF:$Q^* = F^{-1}(\alpha)$
+3. (可选)计算期望利润
 
 ### (b) 样本数据
 1. 计算 $\alpha$
-2. 排序需求
-3. $Q^* = $ ⌈$n\alpha$⌉ 个最小值
+2. 对需求排序
+3. $Q^* = $ 第 ⌈$n\alpha$⌉ 小的值
 
 ### (c) 回归树
-1. 沿树下降 $x$ 找到叶子 $\ell$
-2. $Q^*(x) = $ $\ell$ 中需求的经验 $\alpha$ 分位数
+1. 将 $x$ 沿树下落找到叶节点 $\ell$
+2. $Q^*(x) = $ $\ell$ 中需求的经验 $\alpha$-分位数
 
 ### (d) 线性回归
-1. 拟合线性模型，获得 $\hat\beta, \hat\sigma$
+1. 拟合线性模型,得到 $\hat\beta, \hat\sigma$
 2. 预测均值 $\hat\mu(x)$
 3. $Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$
 
-## 13. 常见错误
+## 13. 常见错误 ⚠️
 
-1. **分位数方向错误。** $F(Q^*) = \alpha$（CDF），而非 $P(D > Q^*) = \alpha$。
-2. **遗忘残值。** 如果 $s > 0$：$c_o = c - s$（不仅仅是 $c$）。
-3. **二次方程根错误。** 三角形：$Q^* = 300 \pm 86.6$ — 选择 $[a, c]$ 中的根，即 213。
-4. **在经验分位数中使用 $\lfloor n\alpha \rfloor$ 而非 ⌈$n\alpha$⌉**。
-5. **当 $\alpha < 0.5$ 时遗忘 $z_\alpha < 0$。** 当缺货廉价时，订购低于均值。
-6. **使用均值作为 $Q^*$。** 仅当 $\alpha = 0.5$ 时正确。
-7. **树过度拟合。** 使用 max_depth ≤ 4。
-8. **三角形的 CDF 分支错误。** 先检查 $\alpha$ 与 $F(b)$ 的关系。
+1. **分位数方向错误。** $F(Q^*) = \alpha$(CDF),而**不是** $P(D > Q^*) = \alpha$。
+2. **忘记残值。** 若 $s > 0$:$c_o = c - s$(不是只有 $c$)。
+3. **二次方程根选错。** 三角分布:$Q^* = 300 \pm 86.6$ —— 选 $[a, c]$ 范围内的根,即 213。
+4. **使用 $\lfloor n\alpha \rfloor$ 而不是 ⌈$n\alpha$⌉** 计算经验分位数。
+5. **忘记 $\alpha < 0.5$ 时 $z_\alpha < 0$。** 缺货成本低时应订货量低于均值。
+6. **将均值作为 $Q^*$。** 仅在 $\alpha = 0.5$ 时正确。
+7. **回归树过拟合。** 使用 max_depth ≤ 4。
+8. **三角分布 CDF 分支错误。** 先比较 $\alpha$ 与 $F(b)$。
 
-## 14. 考试相关
+## 14. 考试相关性
 
-考试幻灯片列出 4 种报童问题类型：
+考试幻灯片列出 4 类报童问题:
 1. **排序数据 + (p, c)** → 经验分位数。
-2. **密度给定** → 积分到 CDF，反演。
-3. **回归树** → 叶子分位数。
+2. **给定密度函数** → 积分得 CDF,反演。
+3. **回归树** → 叶节点分位数。
 4. **线性回归** → $\hat\mu + z_\alpha \hat\sigma$。
 
-加上练习：报童-I（均匀/咖啡）、报童-II（三角形/甜甜圈）。
+加上练习:Newsvendor-I(均匀分布/咖啡)、Newsvendor-II(三角分布/甜甜圈)。
 
-## 15. 迷你练习
+## 15. 小练习
 
 **Q1.** $D \sim U[0,100], p=50, c=30$。$\alpha = 0.4$。$Q^* = 0 + 0.4(100) = 40$。
 
-**Q2.** $D \sim N(100, 15^2), p=80, c=50$。$\alpha = 0.375$, $z_{0.375} \approx -0.319$。$Q^* = 100 - 4.8 \approx 95$。
+**Q2.** $D \sim N(100, 15^2), p=80, c=50$。$\alpha = 0.375$,$z_{0.375} \approx -0.319$。$Q^* = 100 - 4.8 \approx 95$。
 
-**Q3.** $D \sim$ Tr[50,100,150], $p=60, c=24$。$\alpha=0.6$。$F(100)=50/100=0.5$。使用上分支：$Q^* = 150 - \sqrt{0.4 \cdot 50 \cdot 100} = 150 - \sqrt{2000} = 150-44.7=105.3$。
+**Q3.** $D \sim$ Tr[50,100,150],$p=60, c=24$。$\alpha=0.6$。$F(100)=50/100=0.5$。使用上分支:$Q^* = 150 - \sqrt{0.4 \cdot 50 \cdot 100} = 150 - \sqrt{2000} = 150-44.7=105.3$。
 
-**Q4.** 数据 [44..62]（20 个观察），$p=10, c=4$。$\alpha=0.6$, $\lceil 12 \rceil = 12$。排序第 12 个值 = 54。
+**Q4.** 数据 [44..62](20 个观测),$p=10, c=4$。$\alpha=0.6$,$\lceil 12 \rceil = 12$。排序第 12 个值 = 54。
 
-**Q5.** 背景变量：2 个叶子，叶子 A 需求 [18,22,19,21,20,23,17,19,21,22]（10 个观察），$\alpha=0.3 \Rightarrow$ 第 3 个最小值 = 19。为叶子 A 客户订购 19 单位。
+**Q5.** 背景变量:2 个叶节点,叶节点 A 的需求 [18,22,19,21,20,23,17,19,21,22](10 个观测),$\alpha=0.3 \Rightarrow$ 第 3 小 = 19。叶节点 A 顾客订货 19 单位。
 
 **Q6.** $\hat\mu = 200, \hat\sigma = 30, \alpha = 0.8, z_{0.8}=0.842$。$Q^*= 200 + 25.3 = 225$。
 
-## 16. 速查表
+## 16. 速查卡
 
 | 概念 | 公式 |
 |---|---|
@@ -656,152 +656,188 @@ $$\pi^* = pE[D] - E[\text{损失}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
 | 最优 Q | $Q^* = F^{-1}(\alpha)$ |
 | 均匀分布 | $Q^* = a + \alpha(b-a)$ |
 | 正态分布 | $Q^* = \mu + z_\alpha \sigma$ |
-| 经验 | $Q^* = $ ⌈$n\alpha$⌉ 个排序值 |
-| 树背景变量 | $Q^*(x) = $ 叶子的 $\alpha$ 分位数 |
+| 经验分位数 | $Q^* = $ 第 ⌈$n\alpha$⌉ 小的排序值 |
+| 回归树背景变量 | $Q^*(x) = $ 叶节点的 $\alpha$-分位数 |
 | 线性回归背景变量 | $Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$ |
-| $c_u, c_o$ | $c_u = p - c$; $c_o = c - s$ |
+| $c_u, c_o$ | $c_u = p - c$;$c_o = c - s$ |
 
-**常见 $z_\alpha$：** $z_{0.1}=-1.28, z_{0.25}=-0.67, z_{0.5}=0, z_{0.75}=0.67, z_{0.9}=1.28, z_{0.95}=1.65$。
+**常用 $z_\alpha$:** $z_{0.1}=-1.28, z_{0.25}=-0.67, z_{0.5}=0, z_{0.75}=0.67, z_{0.9}=1.28, z_{0.95}=1.65$。
 
 ---
 
-## 讲座录音见解 — 超越幻灯片
+## 🎙️ 课堂录音洞察 —— 超越幻灯片
 
-来自 Prof. Misic 的 4/15 讲座。
+来自 Misic 教授 4/15 的课程。
 
-### 关键公式（反复强调）
+### 关键公式(反复强调)
 
-> "有一个公式来找到最优 Q。无论你的分布是什么或数据集是什么。"
+> *"有一个公式可以找到最优 Q。**无论**你的分布是什么或数据集是什么。"*
 
 $$Q^* = F^{-1}\left(\frac{p-c}{p}\right) \quad \Leftrightarrow \quad F(Q^*) = \frac{p-c}{p}$$
 
-> "这是非常容易计算的东西。"
+> *"这非常容易计算。"*
 
-**伴随关系：** $P(\text{失去销售}) = c/p$，与分布无关。
+**配套关系:** $P(\text{失去销售}) = c/p$,与分布无关。
 
 ### 关键澄清
 
-**缺货与过剩（精确金额）：**
-- **过剩（$Q > D$）：** 为 $Q$ 单位付费，售出 $D$。损失 = 每单位超出部分 $c$。
-- **缺货（$Q < D$）：** 需求超过供应。每单位未满足损失 $p - c$（放弃的利润，不仅仅是价格）。
+**缺货成本 vs 过剩成本(精确的美元金额):**
+- **过剩($Q > D$):** 支付了 $Q$ 单位的成本,但只卖出 $D$。每多 1 单位损失 $c$。
+- **缺货($Q < D$):** 需求超过供应。每少 1 单位损失 $p - c$(放弃的利润,**不是**价格)。
 
-> "它增加 p 对吧。你售出一个单位但你损失 c，因为你必须库存一个单位。所以这就是为什么它是 p 减 c。"
+> *"它会增加 p。你多卖一单位,但因为你需要多备一单位库存,所以损失 c。这就是为什么是 p 减 c。"*
 
-**为什么 CDF 反演起作用（边际逻辑）：**
-在最优点，边际收益 = 边际成本：
-- 上行：$p \cdot P(D > Q)$（需求超过库存的收益）
-- 下行：$c \cdot 1$（一个额外单位的成本）
-- 设置相等：$p(1 - F(Q^*)) = c \Rightarrow F(Q^*) = (p-c)/p$。
+**为什么 CDF 反演有效(边际逻辑):**
+在最优处,边际收益 = 边际成本:
+- 上行:$p \cdot P(D > Q)$(需求超过库存时的收入)
+- 下行:$c \cdot 1$(多 1 单位的成本)
+- 令其相等:$p(1 - F(Q^*)) = c \Rightarrow F(Q^*) = (p-c)/p$。
 
-**连续 vs 离散需求：**
-> "我们将假设 D 是连续随机变量...这使分析实际上非常容易。你会看到我们将与一些积分一起工作。" 使用离散数据时，使用经验分位数（`np.quantile`）。
+**连续 vs 离散需求:**
+> *"我们假设 D 是连续随机变量……这其实让分析变得很容易。你会看到我们要处理一些积分。"* 对于离散数据,使用经验分位数(`np.quantile`)。
 
-### 销售与需求（关键）
+### 销售 vs 需求(关键)
 
-> "关键是销售和需求之间的差异。"
+> *"关键在于销售与需求之间的**差别**。"*
 
-- 需求 $D$：客户想要什么。
-- 销售 = $\min(Q, D)$：你实际能售出什么。
-- 如果 $Q = 80, D = 100$：你售出 80，在机会中失去 20。
+- 需求 $D$:顾客想要的数量。
+- 销售 = $\min(Q, D)$:实际可以卖出的数量。
+- 若 $Q = 80, D = 100$:卖出 80,损失 20 的机会成本。
 
 ### 学生问答
 
-**Q：为什么选择正态而非泊松？**
-> "所有道路通罗马基本上...中心极限定理发挥作用...他们都不会看到质量不同的行为。"
+**Q:为什么用正态分布而不是泊松分布?**
+> *"条条大路通罗马……中心极限定理生效……它们都不会表现出本质上不同的行为。"*
 
-只有当你真正相信极端结果时，才使用极端尾分布。
+只在你真的相信有极端结果时,才使用极端尾部分布。
 
-**Q：这是日常还是长期？**
-> "问题处于一天的层面。但期望反映长期平均。如果期望利润是 $1,000，你的平均超过许多天非常接近 $1,000。"
+**Q:这是日度还是长期?**
+> *"问题是在日度层面。但期望反映了长期平均。如果期望利润是 $1,000,那么多天的平均值非常接近 $1,000。"*
 
-**Q：需求能否自相关？**
-> "是的。如果昨天的新闻卖得很好，今天我可能会订购更多。这导致背景变量报童问题。"
+**Q:需求可以自相关吗?**
+> *"可以。如果昨天的报纸卖了很多,今天我可能多订一些。这就导致了背景变量报童问题。"*
 
-**Q：护士配备示例**（作业类型）：
-- 正式护士成本：$2,160/天。代理护士：$5,400/天。
-- 将一个护士移向需求 → 节省 $5,400（避免代理）但仍支付 $2,160（已雇用的正式）。
-- $c_u = 5{,}400 - 2{,}160$？从边际思考 — 每个单位更接近需求的成本如何变化？
+**Q:护士排班例子**(作业类型):
+- 正式护士成本:$2,160/天。临时(机构)护士:$5,400/天。
+- 将 1 名护士移近需求 → 节省 $5,400(避免使用机构护士)但仍需支付 $2,160(已雇佣的正式护士)。
+- $c_u = 5{,}400 - 2{,}160$?用边际思维 —— 每单位接近需求成本如何变化?
 
-### 工作笔记本示例
+### Notebook 详细示例
 
-**$p = 100, c = 90$（合成需求，1000 个样本）：**
+**$p = 100, c = 90$(合成需求,1000 个样本):**
 - 最优 $Q^* = 363$。
 - 经验 $P(\text{失去销售}) = 0.898 \approx 0.9 = c/p$。 ✓
 
-**$p = 100, c = 70$：**
-- $Q^* = 446$（更大 — 过剩成本更低，所以库存更多）。
+**$p = 100, c = 70$:**
+- $Q^* = 446$(**更大** —— 过剩成本更低,所以多备货)。
 - $P(\text{失去销售}) \approx 0.7 = c/p$。 ✓
 
-**$p = 100, c = 10$：**
-- $Q^*$ 更大。
+**$p = 100, c = 10$:**
+- $Q^*$ 大得多。
 - $P(\text{失去销售}) \approx 0.1 = c/p$。
 
-> "这个性质成立对吧，无论分布是什么。"
+> *"这个性质成立,**无论分布是什么**。"*
 
-**伽马分布测试：** 公式仍然有效。分位数函数中插值的小不匹配。
+**伽马分布测试:** 公式仍然有效。分位数函数中的插值会有小的偏差。
 
-### 橙汁案例 — 关键见解
+### 橙汁案例 —— 关键洞察
 
-Domenic 的 Spider Foods 连锁店，83 家商店，11 种 OJ 产品。人口统计：60 岁以上、大学学位百分比、收入等。
+Domenic's Spider Foods 连锁店,83 家门店,11 种橙汁产品。人口统计:60岁以上比例、大学比例、收入等。
 
-**商店有不同的需求分布** → 背景变量报童问题很重要。
+**不同门店有**不同的**需求分布** → 背景变量报童问题很重要。
 
-**回归树（max_depth=2）：** 在教育 < 0.449 上分割，然后收入 < 0.87。叶子均值：16k、11.5k、38k、26k 单位。
+**回归树(max_depth=2):** 先按教育 < 0.449 划分,再按收入 < 0.87 划分。叶节点均值:16k、11.5k、38k、26k 单位。
 
-> ❗ ***但这些叶子均值不是最优订购量。***
+> ❗ ***但这些叶节点均值不是最优订货量。***
 
-> "这实际上不是我们订购量应该是什么。"
+> *"那其实不是我们的订货量应该取的值。"*
 
-回归树叶值最小化平方误差（预测均值）。报童需要每个叶子中需求的 $(p-c)/p$ 分位数，而不是均值。
+回归树的叶节点**值**最小化的是平方误差(预测均值)。报童问题需要的是每个叶节点中需求的 $(p-c)/p$ **分位数**,而不是均值。
 
-**步骤：** 用叶子中需求的经验分位数替换树叶值。
+**步骤:** 用叶节点中需求的经验分位数替换树叶节点**值**。
 
-### 考试推导策略（记住这 6 步）
+### 考试推导策略(背下这 6 步)
 
-1. 写利润：$\pi(Q) = p \min(Q, D) - cQ$
-2. 取期望：$E[\pi] = pE[\min(Q,D)] - cQ$
-3. 分割：$E[\min] = \int_0^Q x f(x)dx + Q \cdot P(D > Q)$
-4. 微分（基本定理）：$\frac{d}{dQ} \int_0^Q xf(x)dx = Q f(Q)$
-5. 设导数 = 0：$p(1 - F(Q^*)) = c$
-6. 求解：$F(Q^*) = (p-c)/p \Rightarrow Q^* = F^{-1}((p-c)/p)$
+1. 写出利润:$\pi(Q) = p \min(Q, D) - cQ$
+2. 取期望:$E[\pi] = pE[\min(Q,D)] - cQ$
+3. 拆分:$E[\min] = \int_0^Q x f(x)dx + Q \cdot P(D > Q)$
+4. 求导(微积分基本定理):$\frac{d}{dQ} \int_0^Q xf(x)dx = Q f(Q)$
+5. 令导数 = 0:$p(1 - F(Q^*)) = c$
+6. 求解:$F(Q^*) = (p-c)/p \Rightarrow Q^* = F^{-1}((p-c)/p)$
 
 ### 警告
 
-- **销售 ≠ 需求。** 如果 $Q < D$：销售 = $Q$，而非 $D$。
-- **点预测 ≠ 最优 Q。** 回归均值用于 MSE；报童需要分位数。
-- **易腐烂性假设**仅在未售出 = 零残值时成立。可重用库存不符合。
+- **销售 ≠ 需求。** 若 $Q < D$:销售 = $Q$,**不是** $D$。
+- **点预测 ≠ 最优 Q。** 回归均值是为 MSE 服务;报童问题需要**分位数**。
+- **易腐性假设** 仅在未售出 = 零残值时成立。可重用的库存不适用。
 
-### 背景变量报童问题 — 完整程序
+### 背景变量报童问题 —— 完整流程
 
-1. 在训练数据 $(X_i, D_i)$ 上训练预测模型（回归树 / 线性回归 / k-NN）。
-2. 对于每个"区域"（树叶），计算该区域中需求的 $(p-c)/p$ 经验分位数。
-3. 对于新背景 $x$：找出 $x$ 属于哪个区域 → 使用该分位数作为 $Q^*(x)$。
+1. 在训练数据 $(X_i, D_i)$ 上训练预测模型(回归树 / 线性回归 / k-NN)。
+2. 对每个"区域"(树叶节点),计算该区域中需求的 $(p-c)/p$ **经验分位数**。
+3. 对新背景变量 $x$:找出 $x$ 落入哪个区域 → 使用该分位数作为 $Q^*(x)$。
 </script>
 
 <script>
+let __renderInFlight = false;
+let __currentLang = null;
+
 function renderContent(lang) {
+  // Skip redundant renders for the same language
+  if (lang === __currentLang) return;
+  if (__renderInFlight) return;
+  __renderInFlight = true;
+
   const id = (lang === 'zh') ? 'md-zh' : 'md-en';
   const src = document.getElementById(id).textContent;
-  document.getElementById('content').innerHTML = marked.parse(src);
-  // Swap banner labels too
+  const contentEl = document.getElementById('content');
+  const scrollY = window.scrollY;
+
+  contentEl.innerHTML = marked.parse(src);
+
+  // Swap banner labels
   document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
-    // Only update simple text spans (not children)
-    if (el.children.length === 0) el.textContent = txt;
-  });
-  // Re-typeset MathJax
-  setTimeout(() => {
-    if (window.MathJax && MathJax.typesetPromise) {
-      MathJax.typesetPromise([document.getElementById('content')]);
+    if (el.children.length === 0) {
+      el.textContent = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
     }
-  }, 50);
+  });
+
+  __currentLang = lang;
+
+  const finish = () => {
+    __renderInFlight = false;
+    // Preserve scroll position only on language switch, not initial load
+    if (scrollY > 0) window.scrollTo(0, scrollY);
+  };
+
+  // Typeset MathJax when ready
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    try { MathJax.typesetClear([contentEl]); } catch (e) {}
+    MathJax.typesetPromise([contentEl]).then(finish).catch(finish);
+  } else if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+    MathJax.startup.promise.then(() => {
+      try { MathJax.typesetClear([contentEl]); } catch (e) {}
+      return MathJax.typesetPromise([contentEl]);
+    }).then(finish).catch(finish);
+  } else {
+    // MathJax script not loaded yet — wait for it
+    let tries = 0;
+    const wait = setInterval(() => {
+      if (window.MathJax && MathJax.typesetPromise) {
+        clearInterval(wait);
+        MathJax.typesetPromise([contentEl]).then(finish).catch(finish);
+      } else if (++tries > 30) {
+        clearInterval(wait);
+        finish();
+      }
+    }, 200);
+  }
 }
 
-// Initial render based on saved preference
-const initLang = localStorage.getItem('site_lang') || 'en';
-renderContent(initLang);
+// Initial render based on saved preference (runs once)
+renderContent(localStorage.getItem('site_lang') || 'en');
 
-// Listen for language change events from script.js
+// Listen for language change events from the toggle button (runs only when lang actually changes)
 window.addEventListener('langchange', e => renderContent(e.detail));
 </script>
 <script src="script.js"></script>

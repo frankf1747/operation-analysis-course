@@ -741,29 +741,65 @@ $$d_i(\mathbf{p}) = \alpha_i - \beta_i p_i + \sum_{j \ne i} \gamma_{i,j} p_j$$
 </script>
 
 <script>
+let __renderInFlight = false;
+let __currentLang = null;
+
 function renderContent(lang) {
+  // Skip redundant renders for the same language
+  if (lang === __currentLang) return;
+  if (__renderInFlight) return;
+  __renderInFlight = true;
+
   const id = (lang === 'zh') ? 'md-zh' : 'md-en';
   const src = document.getElementById(id).textContent;
-  document.getElementById('content').innerHTML = marked.parse(src);
-  // Swap banner labels too
+  const contentEl = document.getElementById('content');
+  const scrollY = window.scrollY;
+
+  contentEl.innerHTML = marked.parse(src);
+
+  // Swap banner labels
   document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
-    // Only update simple text spans (not children)
-    if (el.children.length === 0) el.textContent = txt;
-  });
-  // Re-typeset MathJax
-  setTimeout(() => {
-    if (window.MathJax && MathJax.typesetPromise) {
-      MathJax.typesetPromise([document.getElementById('content')]);
+    if (el.children.length === 0) {
+      el.textContent = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
     }
-  }, 50);
+  });
+
+  __currentLang = lang;
+
+  const finish = () => {
+    __renderInFlight = false;
+    // Preserve scroll position only on language switch, not initial load
+    if (scrollY > 0) window.scrollTo(0, scrollY);
+  };
+
+  // Typeset MathJax when ready
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    try { MathJax.typesetClear([contentEl]); } catch (e) {}
+    MathJax.typesetPromise([contentEl]).then(finish).catch(finish);
+  } else if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+    MathJax.startup.promise.then(() => {
+      try { MathJax.typesetClear([contentEl]); } catch (e) {}
+      return MathJax.typesetPromise([contentEl]);
+    }).then(finish).catch(finish);
+  } else {
+    // MathJax script not loaded yet — wait for it
+    let tries = 0;
+    const wait = setInterval(() => {
+      if (window.MathJax && MathJax.typesetPromise) {
+        clearInterval(wait);
+        MathJax.typesetPromise([contentEl]).then(finish).catch(finish);
+      } else if (++tries > 30) {
+        clearInterval(wait);
+        finish();
+      }
+    }, 200);
+  }
 }
 
-// Initial render based on saved preference
-const initLang = localStorage.getItem('site_lang') || 'en';
-renderContent(initLang);
+// Initial render based on saved preference (runs once)
+renderContent(localStorage.getItem('site_lang') || 'en');
 
-// Listen for language change events from script.js
+// Listen for language change events from the toggle button (runs only when lang actually changes)
 window.addEventListener('langchange', e => renderContent(e.detail));
 </script>
 <script src="script.js"></script>
