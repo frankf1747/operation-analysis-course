@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>考试策略 | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">运筹分析 — 期末复习</p>
+<nav>
+<a href="index_zh.html">🏠 总览</a>
+<a href="strategy_zh.html" class="active">🎯 考试策略</a>
+<a href="week1.html">第 1 周 — 线性规划对偶</a>
+<a href="week2.html">第 2 周 — 收益管理</a>
+<a href="week3.html">第 3 周 — 报童问题</a>
+<a href="week4.html">第 4 周 — 选址问题</a>
+<a href="week5.html">第 5 周 — 商品组合</a>
+<a href="week6.html">第 6 周 — 定价</a>
+<a href="week7.html">第 7 周 — 网络流</a>
+<a href="week8.html">第 8 周 — 旅行商问题</a>
+<a href="formulas_zh.html">📐 公式表</a>
+<a href="templates_zh.html">🧩 题型模板</a>
+<a href="crash_zh.html">🚨 考前一晚</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>🎯 考试策略</h1>
+
+<div class="callout exam">
+<strong>🎙️ 教授确认信息(5/27 最后一次讲课):</strong>
+<ul style="margin-top:6px">
+<li>考试范围:仅限第 1–8 周。</li>
+<li><strong>约 6 道大题,每题包含多个小问。</strong></li>
+<li><strong>并非全部 8 个主题都会考到。</strong>部分周次可能完全不出现在试卷中。</li>
+<li>必须使用非图形科学计算器。</li>
+<li><strong>TSP 中 getSubtours 代码阅读题必考。</strong></li>
+<li>教授头号备考建议:<em>“独立完成所有练习题。”</em></li>
+</ul>
+</div>
+
+<h2>考试形式(已确认)</h2>
+<ul>
+<li><strong>闭卷,不允许携带笔记。</strong>仅允许使用非图形科学计算器。</li>
+<li><strong>提供的辅助材料:</strong>线性规划对偶速查表、特定密度函数、特定积分公式。</li>
+<li><strong>考查范围:</strong>仅限第 1–8 周。<span class="warn">第 9 周(列生成)和第 10 周(匹配)已确认不考。</span></li>
+<li><strong>题量:</strong>约 6 道多小问的大题。</li>
+</ul>
+
+<h2>考查的能力</h2>
+<table>
+<tr><th>能力</th><th>出现位置</th><th>示例</th></tr>
+<tr><td><strong>LP/IP 建模</strong></td><td>所有主题</td><td>“将此问题建模为整数规划。不允许使用 Σ 记号。”</td></tr>
+<tr><td><strong>约束修改</strong></td><td>选址、商品组合、定价、TSP、网络流</td><td>“如果还要求每个设施服务 K 个顾客,应如何修改?”</td></tr>
+<tr><td><strong>手工计算</strong></td><td>报童、商品组合、定价</td><td>“根据该密度函数计算最优报童分位数。”</td></tr>
+<tr><td><strong>阅读 Python 代码</strong></td><td>TSP(getSubtours),可能涉及收益管理/报童</td><td>“预测对该序列调用 getSubtours 的输出。”</td></tr>
+<tr><td><strong>最优性解读</strong></td><td>对偶</td><td>“此原始解是否最优?为什么?”</td></tr>
+<tr><td><strong>上界论证</strong></td><td>商品组合、收益管理、LP 松弛</td><td>“在不求解 IP 的情况下,给出一个上界。”</td></tr>
+<tr><td><strong>决策(是否多购入 X?)</strong></td><td>对偶、网络流</td><td>“是否应以 $0.02/克 多购入面粉?”</td></tr>
+</table>
+
+<h2>题型模式(直接来自教授的幻灯片)</h2>
+
+<h3>线性规划对偶</h3>
+<ul>
+<li>将此问题建模为线性规划。</li>
+<li>写出该 LP 的对偶问题。</li>
+<li>给定原始解和对偶解,原始解是否最优?(使用弱对偶性。)</li>
+<li>给定最优对偶解,这关于资源 A 的使用情况意味着什么?(互补松弛性。)</li>
+<li>假设将该资源数量增加 100 单位,利润将变化多少?</li>
+</ul>
+
+<h3>收益管理</h3>
+<ul>
+<li>将容量控制问题建模为 LP。</li>
+<li>基于该 LP 设计动态接受/拒绝算法。</li>
+<li>在时刻 $t$,资源 1 剩 $X$ 单位、资源 2 剩 $Y$ 单位时,应接受哪些请求类型?</li>
+<li>整个时段内顾客类型 5 的预期到达次数?</li>
+<li>有人声称算法的期望收益为 110,而 LP 值为 100,是否可信?</li>
+</ul>
+
+<h3>报童问题</h3>
+<ul>
+<li>历史需求排序数据,$p = 10$,$c = 3$,推荐订货量?</li>
+<li>给定密度函数、$p$、$c$ — 订货量是多少?(积分得 CDF,再取反函数。)</li>
+<li>带回归树的历史数据。给定新的上下文,应订货多少?</li>
+<li>线性回归输出结果。推荐订货量。(条件正态分布。)</li>
+</ul>
+
+<h3>选址</h3>
+<ul>
+<li>将此问题建模为最大覆盖 / p-中位 / p-中心问题。</li>
+<li>写出 p-中位问题的两种不同建模。哪一种更好?为什么?</li>
+<li>修改模型以要求每个选址点最多服务 $K$ 个顾客。</li>
+</ul>
+
+<h3>商品组合</h3>
+<ul>
+<li>给定效用表,计算 $S = \{1, 3, 4\}$ 的选择概率。</li>
+<li>计算 $S = \{1, 3, 4\}$ 的人均期望收益。</li>
+<li>给出最优收益的上界。</li>
+<li>将一般商品组合问题建模为 IP。</li>
+<li>代码 + 输出(LP 松弛)。声称收益为 $X$,是否可信?</li>
+</ul>
+
+<h3>定价</h3>
+<ul>
+<li>线性需求模型参数。给定价格计算需求,计算收益。</li>
+<li>将定价问题建模为 IP。</li>
+<li>给出部分建模,缺少哪些约束?</li>
+</ul>
+
+<h3>网络流</h3>
+<ul>
+<li>供应链的文字描述。建模为 LP。数字需显式写出,不使用 Σ。</li>
+<li>决定从 A 到 Z 的路径。带附加约束。建模为 IP。</li>
+</ul>
+
+<h3>旅行商问题(TSP)</h3>
+<ul>
+<li>缺少 SEC(子环路消除约束)的 TSP 建模 — 为什么会失败?</li>
+<li>给定解 $x$ 和 Python 代码,getSubtours 的输出是什么?</li>
+<li>根据 getSubtours 的输出,写出延迟回调添加的 SEC。</li>
+<li>问题的文字描述。建模为 IP(识别这是 TSP)。</li>
+</ul>
+
+<h2>需要记忆的内容</h2>
+<div class="callout warn">
+<ul>
+<li>原始→对偶转换表(约束↔变量)</li>
+<li>报童临界分位数公式</li>
+<li>三角分布的 PDF、CDF 及其反函数(很可能提供 — 但保险起见仍需熟记)</li>
+<li>流量守恒方程:流入 + 供应 = 流出 + 需求</li>
+<li>TSP 度数 = 1 + SEC ≤ |S| − 1</li>
+<li>出价价格决策规则:票价 ≥ Σ 影子价格</li>
+<li>附加约束模式(若 A 则 B;至多 K 个;等 — 见“题型模板”页)</li>
+</ul>
+</div>
+
+<h2>需要理解的内容</h2>
+<div class="callout key">
+<ul>
+<li><strong>为什么</strong>TSP 中仅靠度数约束会失败(允许出现子环路)</li>
+<li><strong>为什么</strong>取对数变换可将最大可靠性问题转化为最短路径问题</li>
+<li><strong>为什么</strong>定制化的上界 > 实际可达收益(按客户段定制)</li>
+<li><strong>为什么</strong>影子价格 = 边界处的边际价值</li>
+<li><strong>为什么</strong>LP 松弛为 IP 提供上界</li>
+<li><strong>为什么</strong>强约束能加快求解(LP 更紧)</li>
+</ul>
+</div>
+
+<h2>需要练习的内容</h2>
+<div class="callout info">
+<ul>
+<li>完整地写出 LP 建模(定义每个变量;展开所有约束;若要求“不使用 Σ”则不可使用)。</li>
+<li>手工逐行追踪 Python 代码 — 尤其是 <code>getSubtours</code> 和回归树叶节点预测。</li>
+<li>对分段定义的密度函数进行积分以计算期望利润(三角分布报童)。</li>
+<li>仅凭一句话描述识别问题类型。</li>
+<li>独立完成全部 9 道练习题,不要先看答案。</li>
+</ul>
+</div>
+
+<h2>考试当天时间管理</h2>
+<ol>
+<li><strong>前 5 分钟:</strong>通览整张试卷,识别出容易的题。</li>
+<li><strong>先做容易题。</strong>在攻克长题前先把分稳稳拿到手。</li>
+<li><strong>对于建模题:</strong>始终从清晰定义变量开始。一半的分数往往来自这一步。</li>
+<li><strong>对于“不使用 Σ”的题:</strong>耐心枚举。漏掉一个变量会丢大分。</li>
+<li><strong>对于代码追踪题:</strong>把环路画出来,不要只盯着代码看。</li>
+<li><strong>展示过程:</strong>即使最终答案错了,正确的建立过程也能拿到部分分。</li>
+<li><strong>预留 15 分钟</strong>在最后复查所有答案。</li>
+</ol>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

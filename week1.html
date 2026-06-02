@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 1 — LP Duality | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html" class="active">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Management</a>
+<a href="week3.html">Week 3 — Newsvendor Problem</a>
+<a href="week4.html">Week 4 — Location Models</a>
+<a href="week5.html">Week 5 — Assortment Optimization</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — Traveling Salesman</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+<main>
+<div class="week-banner">
+<div class="week-meta">
+<span class="week-num" data-en="Week 1" data-zh="第1周">Week 1</span>
+<h1><span data-en="LP Duality" data-zh="对偶性、影子价格">LP Duality</span> <span class="cn">对偶性、影子价格</span></h1>
+<p class="topics" data-en="Bakery LP example, primal-dual, weak/strong duality, shadow prices, complementary slackness" data-zh="Bakery LP example, primal-dual, weak/strong duality, shadow prices, complementary slackness">Bakery LP example, primal-dual, weak/strong duality, shadow prices, complementary slackness</p>
+</div>
+<div class="open-pdf">
+<strong><span data-en="📖 Open lecture PDF alongside:" data-zh="📖 同时打开讲义PDF：">📖 Open lecture PDF alongside:</span></strong><br>
+<code>../1/Lecture1_LPDuality_v2-1.pdf</code>
+</div>
+</div>
+<article id="content" class="markdown-body"></article>
+</main>
+
+<script id="md-en" type="text/markdown"># Week 1 — LP Duality
+
+## 0. Big Picture
+
+Imagine you own a bakery and want to maximize profit by deciding what to bake. You know your ingredient limits: 26kg butter, 80kg flour, 5kg sugar. But here's a harder question: **what is each resource actually worth to your business?** If someone offered to sell you more flour at a certain price, should you buy it? Duality answers this by flipping your problem on its head. Instead of asking "how much should I produce to maximize revenue?", the dual problem asks "what prices should I charge for my raw ingredients if I'm competing in a resource market?" The primal problem tells you the optimal production plan; the dual problem tells you the implicit value—the **shadow price (影子价格)**—of each constrained resource. This is not just theoretical: these shadow prices let you make real business decisions about whether to buy more inputs, and they're free from solving the primal LP (the algorithm gives you both). Strong duality (强对偶) guarantees that the primal's optimal profit equals the dual's optimal resource valuation cost—they're two sides of the same coin. This week teaches you the mechanics of duality, how to derive the dual problem, and most importantly, how to interpret shadow prices to answer sensitivity questions (灵敏度分析) about your operations.
+
+## 1. Quick LP Refresher (for the unprepared)
+
+A **linear program** is an optimization problem where you maximize (or minimize) a linear objective function subject to linear constraints.
+
+**Standard form (for a maximization problem):**
+$$\text{maximize } \mathbf{c}^T \mathbf{x}$$
+$$\text{subject to } A\mathbf{x} \le \mathbf{b}$$
+$$\mathbf{x} \ge \mathbf{0}$$
+
+**Key terms:**
+- **Decision variables** ($\mathbf{x}$): what you're deciding (how much to produce, allocate, etc.)
+- **Objective function** ($\mathbf{c}^T \mathbf{x}$): the profit, cost, or revenue you optimize
+- **Constraints** ($A\mathbf{x} \le \mathbf{b}$): resource limits, requirements, etc.
+- **Feasible region**: the set of all $\mathbf{x}$ satisfying all constraints
+- **Optimal solution**: the feasible point with the best objective value
+
+**Tiny 2-variable example:**
+$$\text{maximize } 3x_1 + 2x_2 \quad \text{s.t.} \quad x_1 + x_2 \le 4,\; x_1, x_2 \ge 0$$
+
+Geometrically, the feasible region is a triangle with corners at $(0,0)$, $(4,0)$, and $(0,4)$. The objective function $3x_1 + 2x_2$ defines a family of parallel lines. You slide these lines outward until they touch the feasible region at exactly one corner—here, $(4,0)$ with objective value $12$. That corner is the optimal solution.
+
+## 2. Slide-by-Slide Walkthrough
+
+### Introduction & Context
+LP review from MGMTMSA 403, advancing to: (1) what is a dual problem, (2) what is a shadow price, (3) sensitivity analysis. Tools: Python + Gurobi + Jupyter.
+
+### The Bakery Production Problem
+
+A bakery produces three items weekly: buns, croissants, and muffins.
+
+| Product | Unit Price | Butter (g/unit) | Flour (g/unit) | Sugar (g/unit) |
+|---------|------------|-----------------|----------------|----------------|
+| Bun     | $3.00      | 20              | 100            | 0              |
+| Croissant | $4.00    | 100             | 50             | 50             |
+| Muffin  | $4.50      | 10              | 0              | 150            |
+
+Available: 26,000g butter, 80,000g flour, 5,000g sugar.
+
+**Primal LP:**
+$$\max 3x_B + 4x_C + 4.5x_M$$
+$$\text{s.t.}\; 20x_B + 100x_C + 10x_M \le 26000 \text{ (butter)}$$
+$$100x_B + 50x_C + 0x_M \le 80000 \text{ (flour)}$$
+$$0x_B + 50x_C + 150x_M \le 5000 \text{ (sugar)}$$
+$$x_B, x_C, x_M \ge 0$$
+
+This is a recipe-balancing problem. Each product needs certain amounts of three ingredients. We have limited stock and want to maximize the total selling value.
+
+### Bounding Our LP (Motivation for Duality)
+
+"Can you obtain an upper bound on the best possible revenue without solving the LP?"
+
+Combine the three constraints with weights $p_B$, $p_F$, $p_S \ge 0$:
+$$p_B \cdot (\text{butter constraint}) + p_F \cdot (\text{flour constraint}) + p_S \cdot (\text{sugar constraint})$$
+
+If we choose weights such that the left coefficients dominate the objective:
+- $20p_B + 100p_F + 0p_S \ge 3$
+- $100p_B + 50p_F + 50p_S \ge 4$
+- $10p_B + 0p_F + 150p_S \ge 4.5$
+
+Then for any feasible $x$: $3x_B + 4x_C + 4.5x_M \le 26000 p_B + 80000 p_F + 5000 p_S$.
+
+**Why these weights?** They represent implicit prices for the resources.
+
+### Weak Duality (弱对偶)
+
+**Weak Duality Theorem:** For any feasible primal solution and any feasible dual solution:
+$$\text{primal objective} \le \text{dual objective}$$
+
+If we produce ($x_B = 100, x_C = 50, x_M = 0$) with revenue $700$, and guess prices $(p_B, p_F, p_S) = (0.02, 0.01, 0.05)$, the dual objective is:
+$$0.02 \cdot 26000 + 0.01 \cdot 80000 + 0.05 \cdot 5000 = 1570$$
+Weak duality: $700 \le 1570$ ✓.
+
+This gives us a way to verify optimality: if primal = dual, both are optimal.
+
+### Formulating the Dual Mechanically
+
+For our **maximization primal** (3 ≤ constraints, 3 ≥0 variables), the **dual is minimization**:
+
+**Dual:**
+$$\min 26000p_B + 80000p_F + 5000p_S$$
+$$\text{s.t.}\; 20p_B + 100p_F + 0p_S \ge 3 \text{ (bun's coef)}$$
+$$100p_B + 50p_F + 50p_S \ge 4 \text{ (croissant's coef)}$$
+$$10p_B + 0p_F + 150p_S \ge 4.5 \text{ (muffin's coef)}$$
+$$p_B, p_F, p_S \ge 0$$
+
+The dual has one variable per primal constraint and one constraint per primal variable. Dual objective sums RHS × prices; dual constraints ensure prices are "high enough" to cover product profitability.
+
+### Strong Duality (强对偶)
+
+**Strong Duality Theorem:** If the primal LP has an optimal solution, the dual LP also has an optimal solution, and the optimal objective values are EQUAL.
+
+**Bakery example:**
+- Primal optimal: $x_B = 750, x_C = 100, x_M = 0$ → Revenue = $3(750) + 4(100) = 2650$
+- Dual optimal: $p_F = 0.03, p_S = 0.05, p_B = 0$ (from notebook) → Cost matches 2650 by strong duality
+
+### Shadow Prices (影子价格)
+
+The optimal dual variable $p_i$ for constraint $i$ is the **shadow price**. It answers:
+
+> "How much would the optimal objective increase if I relax constraint $i$ by one unit?"
+
+**Bakery interpretation:**
+- Flour: $p_F = 0.03$/g → 1 extra gram of flour adds $0.03 revenue
+- Sugar: $p_S = 0.05$/g → 1 extra gram of sugar adds $0.05 revenue
+- Butter: $p_B = 0$/g → butter is not a bottleneck (we have 1000g unused)
+
+**Decision rule:** Buy resource if market price < shadow price. If flour costs $0.02/g and shadow price is $0.03/g, buy it (net gain $0.01/g).
+
+### Complementary Slackness (互补松弛)
+
+At optimality:
+- If primal variable $x_j > 0$ → corresponding dual constraint is **tight** (equality)
+- If primal constraint $i$ has slack (LHS < RHS) → dual variable $p_i = 0$
+- Equivalently: if $p_i > 0$, then primal constraint $i$ is binding
+
+**Bakery check:**
+- $x_B = 750 > 0$ → dual constraint for buns is tight: $20(0) + 100(0.03) + 0(0.05) = 3$ ✓
+- $x_M = 0$ → dual constraint for muffins may have slack
+- Butter slack = 1000 → $p_B = 0$ ✓
+- Flour slack = 0 → $p_F > 0$ allowed ✓
+
+## 3. Bakery Example — Full Numerical Walkthrough
+
+Already covered above. Key facts:
+- Primal optimum = 2650 with $(x_B, x_C, x_M) = (750, 100, 0)$
+- Dual optimum = 2650 with $(p_B, p_F, p_S) = (0, 0.03, 0.05)$ [approximate]
+- Slack: butter 1000g, flour 0, sugar 0
+
+**Sensitivity:** Buy flour at $0.005/g? Yes — net gain 0.025 per gram.
+
+## 4. Bakery LP Notebook — Cell Walkthrough
+
+**Cell 1: Import**
+```python
+from gurobipy import *
+```
+
+**Cell 3: Create model, variables, constraints, objective**
+```python
+m = Model()
+x_B = m.addVar()
+x_C = m.addVar()
+x_M = m.addVar()
+butter_constr = m.addConstr(20*x_B + 100*x_C + 10*x_M <= 26000)
+flour_constr  = m.addConstr(100*x_B + 50*x_C + 0*x_M <= 80000)
+sugar_constr  = m.addConstr(0*x_B + 50*x_C + 150*x_M <= 5000)
+m.setObjective(3*x_B + 4*x_C + 4.5*x_M, GRB.MAXIMIZE)
+```
+- `addVar()` creates a variable, default lower bound 0.
+- `addConstr()` adds a constraint, returns a reference for later `.pi` access.
+
+**Cell 5: Solve**
+```python
+m.update()
+m.optimize()
+```
+
+**Cell 10: Extract Solution**
+```python
+print(x_B.X, x_C.X, x_M.X)  # 750, 100, 0
+print(m.objval)              # 2650
+```
+- `.X` = optimal variable value, `.objval` = optimal objective.
+
+**Cell 13: Explicitly Solve the Dual**
+```python
+m_dual = Model()
+p_B = m_dual.addVar()
+p_F = m_dual.addVar()
+p_S = m_dual.addVar()
+m_dual.addConstr(20*p_B + 100*p_F + 0*p_S >= 3)
+m_dual.addConstr(100*p_B + 50*p_F + 50*p_S >= 4)
+m_dual.addConstr(10*p_B + 0*p_F + 150*p_S >= 4.5)
+m_dual.setObjective(26000*p_B + 80000*p_F + 5000*p_S, GRB.MINIMIZE)
+m_dual.optimize()
+```
+
+**Cell 17: Access Shadow Prices Directly**
+```python
+dual_values = [butter_constr.pi, flour_constr.pi, sugar_constr.pi]
+```
+`.pi` of a constraint = its shadow price.
+
+**Cell 21: Constraint Slacks**
+```python
+slack_values = [butter_constr.slack, flour_constr.slack, sugar_constr.slack]
+```
+`.slack` = RHS − LHS at optimality.
+
+## 5. Primal/Dual Conversion Rules
+
+| Primal (min) | Dual | (variable sign) |
+|--------|--------|--------|
+| Constraint ≥ $b_i$ | $p_i \ge 0$ | |
+| Constraint ≤ $b_i$ | $p_i \le 0$ | |
+| Constraint = $b_i$ | $p_i$ free | |
+| Variable $x_j \ge 0$ | Dual constraint $p^T A_j \le c_j$ | |
+| Variable $x_j \le 0$ | Dual constraint $p^T A_j \ge c_j$ | |
+| Variable $x_j$ free | Dual constraint $p^T A_j = c_j$ | |
+
+**For max primal:** Read the table right-to-left (signs flip).
+
+### Why each rule exists (intuition)
+
+- **≤ in min primal → $p_i \le 0$:** Relaxing ≤ (increasing RHS) makes feasible region larger, can only decrease min objective. So shadow price is non-positive.
+- **≥ in min primal → $p_i \ge 0$:** Relaxing ≥ makes region smaller, can only increase min. Shadow price non-negative.
+- **= → free:** Both upper and lower bound; can't assume sign.
+
+### Worked conversion (max primal)
+$$\max 4x_1 + 5x_2 \;\text{s.t.}\; x_1 + 2x_2 \le 10,\; -x_1 + x_2 \ge 2,\; x_1 \ge 0,\; x_2 \text{ free}$$
+
+Apply max rules:
+- Constraint 1 (≤): dual var $p_1 \le 0$
+- Constraint 2 (≥): dual var $p_2 \ge 0$
+- Variable 1 (≥0): dual constraint $p_1 - p_2 \le 4$
+- Variable 2 (free): dual constraint $2p_1 + p_2 = 5$
+
+**Dual:**
+$$\min 10p_1 + 2p_2 \;\text{s.t.}\; p_1 - p_2 \le 4,\; 2p_1 + p_2 = 5,\; p_1 \le 0, p_2 \ge 0$$
+
+## 6. Step-by-Step Methods
+
+### (a) Formulate an LP from a word problem
+1. Identify decision variables (descriptive names).
+2. Write objective: max/min Σ c·x.
+3. List constraints (resource, market, blending, non-negativity).
+4. Express each as linear inequality/equality.
+5. Verify units.
+
+### (b) Write the dual mechanically
+1. Identify primal form: min/max, constraint types, variable signs.
+2. Create one dual variable per primal constraint.
+3. Flip objective direction.
+4. Transpose: primal constraint RHS → dual objective coefficient; primal variable coefficient → dual constraint RHS.
+5. Apply conversion table (read direction by primal type).
+
+### (c) Use weak duality to verify optimality
+1. Find feasible primal $x$, compute $c^T x$.
+2. Find feasible dual $p$, compute $b^T p$.
+3. If $c^T x = b^T p$: both optimal.
+4. If $c^T x < b^T p$ (max primal): $x$ may not be optimal.
+
+### (d) Use complementary slackness
+1. For each primal constraint $i$: if $p_i^* > 0$, constraint $i$ is tight.
+2. For each dual constraint $j$: if $x_j^* > 0$, constraint $j$ is tight.
+3. Use tight constraints to solve for unknowns.
+
+### (e) "Buy more resource" decision
+1. Find shadow price $p_i^*$.
+2. Compare to per-unit cost $q$.
+3. If $q < p_i^*$ → BUY. Per-unit profit gain = $p_i^* - q$.
+4. Validity: small changes only (sensitivity range).
+
+## 7. Common Mistakes & Traps
+
+1. **Forgetting weak duality requires BOTH feasible.** If your dual guess isn't feasible, you cannot apply weak duality.
+2. **Forgetting to check primal direction.** Min and max have flipped sign rules in conversion table.
+3. **Using shadow prices on non-binding constraints.** Slack > 0 means $p_i = 0$.
+4. **Applying shadow price beyond sensitivity range.** Big changes invalidate the linear approximation; re-solve.
+5. **Forgetting nonnegativity of dual variables.** Inherits from primal constraint type.
+6. **Mixing up slack vs surplus.** Slack = RHS − LHS for ≤ constraint.
+7. **Confusing shadow price with market price.** Shadow price is the *implicit* marginal value, not market price.
+8. **Reading conversion table wrong way for max primal.** Always state "primal is max" first.
+9. **Forgetting unit conversions.** $0.03/g ≠ $30/kg... double-check.
+10. **Ignoring strong duality verification.** Strong duality is the easiest optimality test you have.
+
+## 8. Exam Relevance
+
+**Pattern A — Dual Formulation:** "Write the dual of the following LP." 5 min. Use conversion table.
+
+**Pattern B — Shadow Price Decision:** "Shadow price of X is \$Y. Buy more at \$Z?" 2 min. Compare Z vs Y. Watch units!
+
+**Pattern C — Complementary Slackness Deduction:** "Given $x^*$, which dual constraints are tight?" 3 min. Mechanical application.
+
+**Pattern D — Optimality Verification:** "Verify $x$ and $p$ are both optimal." 3 min. Check feasibility + objectives equal.
+
+**Practice problems to study:** LP Duality-I (toys), LP Duality-II (fabric).
+
+## 9. Mini Practice
+
+### Q1. Formulate Dual from Max Primal
+$$\max 5x + 3y \;\text{s.t.}\; 2x + y \le 8,\; x + 2y \le 6,\; x, y \ge 0$$
+
+**Answer (Dual):**
+$$\min 8p_1 + 6p_2 \;\text{s.t.}\; 2p_1 + p_2 \ge 5,\; p_1 + 2p_2 \ge 3,\; p_1, p_2 \ge 0$$
+
+### Q2. Shadow Price Interpretation
+Given optimal $p_1 = 2.2, p_2 = 0.6$. Interpret $p_1$; effect of relaxing constraint 1?
+
+**Answer:** $p_1 = 2.2$ = shadow price of resource 1. Increasing RHS from 8 to 9 increases optimal by ≈ $2.2.
+
+### Q3. Complementary Slackness Check
+Primal $x = 4, y = 0$; dual $p_1 = 2.2, p_2 = 0.6$. Verify with CS.
+
+**Answer:** $x = 4 > 0$ → dual constraint 1 tight: $2(2.2) + 0.6 = 5$ ✓. $y = 0$ → dual constraint 2 can have slack ($2.2 + 1.2 = 3.4 > 3$ ✓). $p_1 > 0$ → primal constraint 1 tight ($2(4) + 0 = 8$ ✓). $p_2 > 0$ → primal constraint 2 should be tight ($4 + 0 = 4 ≠ 6$, slack=2) ❌ INCONSISTENT. So these are not jointly optimal.
+
+### Q4. Buy-More-Resource
+Flour shadow price = \$0.03/g. Offered at (a) \$0.02/g, (b) \$0.04/g, (c) \$0.03/g.
+
+**(a)** Buy: net +\$0.01/g.
+**(b)** Don't buy: net −\$0.01/g.
+**(c)** Indifferent (boundary).
+
+### Q5. Economic Dual Derivation
+Product A (\$10 profit, 2 labor, 1 machine), Product B (\$15 profit, 1 labor, 3 machine), 100 labor, 80 machine. Write primal and dual.
+
+**Primal:** $\max 10x_A + 15x_B$ s.t. $2x_A + x_B \le 100$, $x_A + 3x_B \le 80$, $x_A, x_B \ge 0$.
+
+**Dual:** $\min 100p_L + 80p_M$ s.t. $2p_L + p_M \ge 10$, $p_L + 3p_M \ge 15$, $p_L, p_M \ge 0$.
+
+Interpretation: A competitor buys all resources at prices $(p_L, p_M)$; they need each product's "purchase price" to exceed the profit we'd make producing it.
+
+## 10. Cheat Card
+
+- **Weak duality (always):** max primal ≤ min dual.
+- **Strong duality (at optimum):** they're equal.
+- **Complementary slackness:** $x_j > 0$ ↔ dual constraint $j$ tight; $p_i > 0$ ↔ primal constraint $i$ tight.
+- **Shadow price decision:** buy resource if cost < shadow price.
+- **Conversion table:** read LEFT→RIGHT for min primal, RIGHT→LEFT for max primal.
+- **Gurobi:** `constraint.pi` = shadow price, `.X` = variable value, `.slack` = RHS−LHS.
+
+---
+
+## 🎙️ Lecture Transcript Insights — Beyond the Slides
+
+These notes capture what Prof. Misic said in class on 4/1 that is NOT in the slides — exam hints, verbal explanations, student Q&A, and warnings.
+
+### Exam-Focused Verbal Cues
+
+- **"Strong duality is THE easiest optimality check."** If you compute primal value = dual value and both are feasible → DONE. Faster than complementary slackness.
+- **"Sensitivity ranges matter."** Shadow prices only hold within a range. If exam says "increase flour by 50%", that's outside the range — you'd need to re-solve, NOT just multiply by shadow price.
+- **Bakery LP is solved as LP not IP** because for thousands of units, rounding 113,478.248 → 113,478 loses at most $3. Integer relaxation is the default unless yes/no decisions (assortment, location, TSP).
+- **Duality is prerequisite for column generation** (NOT on exam, but explains why duality is foundational).
+
+### Concepts Emphasized by Repetition
+
+- **The "recipe" for bounding** via positive linear combinations of constraints (he walked through it 3 times with student attempts giving WRONG bounds before correcting to the dual).
+- **Complementary slackness is a TWO-WAY street:**
+  - Slack > 0 ⇒ dual variable = 0
+  - Dual variable > 0 ⇒ constraint is tight
+  - Many students forget the reverse direction.
+- **Shadow price = derivative of objective w.r.t. constraint RHS.** Taylor expansion: $f(x+h) \approx f(x) + f'(x) h$.
+
+### Verbal Explanations That Clarify
+
+- **Why we don't add non-negativity in Gurobi:** `addVar()` defaults to lower bound 0 and upper bound ∞. You CAN comment out non-negativity lines.
+- **Why IP ruins duality:** With integer constraints, strong duality breaks (you get Lagrangian duality — bound, not exact). Mentioned in PDF notes but beyond W1 scope. Don't try to apply shadow prices to integer programs.
+- **Economic dual interpretation (the "Yash selling ingredients" story):** Primal = "decide what to produce." Dual = "competitor buys all ingredients; price must cover what you'd make by baking each product." This explains why dual constraints have $\ge$ (not $\le$) and why $p_i \ge 0$.
+
+### Student Q&A Highlights
+
+- **"Do we have to solve the dual explicitly?"** No — simplex/interior-point algorithms maintain dual internally. `m.optimize()` gives both. Use `.pi` on the constraint reference.
+- **"Why is butter shadow price = 0 when butter is good?"** Because we have 1000g UNUSED. Slack > 0 ⇒ price = 0.
+- **"Does the shadow price formula always work for any $\Delta b$?"** Only within sensitivity range. Gurobi reports it via `.SARHSLow` and `.SARHSHigh`. Outside the range, other constraints become binding.
+
+### Numerical Walkthrough — Bounds → Dual
+
+Walking through bound construction:
+- Just butter constraint: bound = 26,000 (10× too loose)
+- Butter × 0.5: bound = 13,000 (5× too loose)
+- Student attempt with multiplier 0.1: gave INVALID bound 2,600 (coefficients didn't satisfy ≥)
+- Student correction: flour × 0.1 + sugar × 0.1: bound = 8,500 (valid, tighter)
+- Optimal bound from solving DUAL: 2,650 (matches primal!)
+
+This is the Socratic motivation: students discover dual by trying weights, then the dual problem emerges naturally.
+
+### Sensitivity Validation (notebook ran live)
+
+| ΔFlour (g) | Predicted (shadow price) | Actual | Match? |
+|---|---|---|---|
+| 0 | 2,650 | 2,650 | ✓ |
+| +100 | 2,650 + 100(0.03) = 2,653 | 2,653 | ✓ (exact) |
+| +1,000 | 2,680 | 2,680 | ✓ (exact, at boundary) |
+| +10,000 | 2,950 | < 2,950 | ❌ (approximation breaks) |
+
+### Warnings Flagged Verbally
+
+1. **Never multiply a constraint by a NEGATIVE multiplier** — inequality flips, bound destroyed. Always $p_i \ge 0$.
+2. **Don't apply shadow prices when constraint has slack.** Slack > 0 ⇒ price = 0.
+3. **Big resource changes invalidate the approximation.** State "assuming small changes" when using shadow prices.
+4. **Watch units!** Shadow price $0.03/g vs market price $5/kg = $0.005/g. Convert before comparing.
+5. **Negative dual prices make no sense** in standard formulation.
+
+### Exam Strategy from Prof's Style
+
+For "is this $(x^*, p^*)$ optimal?":
+1. Check $x^*$ feasible in primal AND $p^*$ feasible in dual.
+2. Compute both objectives.
+3. If equal → BOTH optimal (strong duality). Stop.
+4. Only use complementary slackness if you need to know WHICH constraints are tight.
+</script>
+<script id="md-zh" type="text/markdown"># 第 1 周 — 线性规划对偶
+
+## 0. 全局视角
+
+想象你拥有一家面包店，想通过决定烘烤什么来最大化利润。你知道你的原料限制：26公斤黄油、80公斤面粉、5公斤糖。但这里有一个更难的问题：**每种资源对你的生意真正的价值是多少？** 如果有人提议以一定的价格卖给你更多的面粉，你应该买吗？对偶通过将问题倒过来来回答这个问题。与其问"我应该生产多少来最大化收入？"，对偶问题问的是"如果我在资源市场中竞争，我应该为原始原料收费多少？"原问题告诉你最优的生产计划；对偶问题告诉你隐含的价值——每种受约束资源的**影子价格**。这不只是理论上的：这些影子价格让你能够做出关于是否购买更多投入的真实商业决策，而且它们是从求解原问题的线性规划中免费获得的（算法会给你两者）。强对偶保证了原问题的最优利润等于对偶问题的最优资源估值成本——它们是同一枚硬币的两面。这周教你对偶的机制，如何推导对偶问题，最重要的是，如何解释影子价格来回答关于你的运营的灵敏度分析问题。
+
+## 1. 线性规划快速复习（给没做好准备的同学）
+
+**线性规划**是一个优化问题，其中你在线性约束条件下最大化（或最小化）线性目标函数。
+
+**标准形式（最大化问题）：**
+$$\text{maximize } \mathbf{c}^T \mathbf{x}$$
+$$\text{subject to } A\mathbf{x} \le \mathbf{b}$$
+$$\mathbf{x} \ge \mathbf{0}$$
+
+**关键术语：**
+- **决策变量** ($\mathbf{x}$)：你要决定的东西（生产多少、分配多少等）
+- **目标函数** ($\mathbf{c}^T \mathbf{x}$)：你优化的利润、成本或收入
+- **约束** ($A\mathbf{x} \le \mathbf{b}$)：资源限制、要求等
+- **可行域**：所有满足所有约束的 $\mathbf{x}$ 的集合
+- **最优解**：具有最佳目标值的可行点
+
+**微小的 2 变量示例：**
+$$\text{maximize } 3x_1 + 2x_2 \quad \text{s.t.} \quad x_1 + x_2 \le 4,\; x_1, x_2 \ge 0$$
+
+从几何上讲，可行域是一个三角形，顶点在 $(0,0)$、$(4,0)$ 和 $(0,4)$。目标函数 $3x_1 + 2x_2$ 定义了一族平行线。你将这些线向外滑动，直到它们恰好在一个顶点处接触可行域——这里，$(4,0)$ 的目标值是 $12$。那个顶点就是最优解。
+
+## 2. 逐张幻灯片讲解
+
+### 简介与背景
+来自 MGMTMSA 403 的线性规划回顾，进展到：(1) 什么是对偶问题，(2) 什么是影子价格，(3) 灵敏度分析。工具：Python + Gurobi + Jupyter。
+
+### 面包店生产问题
+
+一家面包店每周生产三种产品：小面包、牛角面包和松饼。
+
+| 产品 | 单价 | 黄油 (克/单位) | 面粉 (克/单位) | 糖 (克/单位) |
+|---------|------------|-----------------|----------------|----------------|
+| 小面包     | $3.00      | 20              | 100            | 0              |
+| 牛角面包 | $4.00    | 100             | 50             | 50             |
+| 松饼  | $4.50      | 10              | 0              | 150            |
+
+可用：26,000克黄油、80,000克面粉、5,000克糖。
+
+**原问题：**
+$$\max 3x_B + 4x_C + 4.5x_M$$
+$$\text{s.t.}\; 20x_B + 100x_C + 10x_M \le 26000 \text{ (黄油)}$$
+$$100x_B + 50x_C + 0x_M \le 80000 \text{ (面粉)}$$
+$$0x_B + 50x_C + 150x_M \le 5000 \text{ (糖)}$$
+$$x_B, x_C, x_M \ge 0$$
+
+这是一个配方平衡问题。每种产品需要一定数量的三种原料。我们有有限的库存，想要最大化总销售价值。
+
+### 为线性规划设定边界（对偶的动机）
+
+"你能在不求解线性规划的情况下获得最佳收入的上界吗？"
+
+用权重 $p_B$、$p_F$、$p_S \ge 0$ 组合三个约束：
+$$p_B \cdot (\text{黄油约束}) + p_F \cdot (\text{面粉约束}) + p_S \cdot (\text{糖约束})$$
+
+如果我们选择权重使得左边的系数主导目标函数：
+- $20p_B + 100p_F + 0p_S \ge 3$
+- $100p_B + 50p_F + 50p_S \ge 4$
+- $10p_B + 0p_F + 150p_S \ge 4.5$
+
+那么对于任何可行的 $x$：$3x_B + 4x_C + 4.5x_M \le 26000 p_B + 80000 p_F + 5000 p_S$。
+
+**为什么要选择这些权重？** 它们代表对资源的隐含价格。
+
+### 弱对偶
+
+**弱对偶定理：** 对于任何可行的原问题解和任何可行的对偶问题解：
+$$\text{原问题目标} \le \text{对偶问题目标}$$
+
+如果我们生产 ($x_B = 100, x_C = 50, x_M = 0$) 的收入为 $700$，并且猜测价格 $(p_B, p_F, p_S) = (0.02, 0.01, 0.05)$，对偶目标是：
+$$0.02 \cdot 26000 + 0.01 \cdot 80000 + 0.05 \cdot 5000 = 1570$$
+弱对偶：$700 \le 1570$ ✓。
+
+这给了我们一个验证最优性的方法：如果原问题 = 对偶问题，两者都是最优的。
+
+### 机械地制定对偶
+
+对于我们的**最大化原问题**（3 个 ≤ 约束，3 个 ≥0 变量），**对偶问题是最小化**：
+
+**对偶问题：**
+$$\min 26000p_B + 80000p_F + 5000p_S$$
+$$\text{s.t.}\; 20p_B + 100p_F + 0p_S \ge 3 \text{ (小面包的系数)}$$
+$$100p_B + 50p_F + 50p_S \ge 4 \text{ (牛角面包的系数)}$$
+$$10p_B + 0p_F + 150p_S \ge 4.5 \text{ (松饼的系数)}$$
+$$p_B, p_F, p_S \ge 0$$
+
+对偶问题为每个原问题约束有一个变量，为每个原问题变量有一个约束。对偶目标将右手边乘以价格求和；对偶约束确保价格"足够高"来覆盖产品利润。
+
+### 强对偶
+
+**强对偶定理：** 如果原问题线性规划有最优解，对偶问题线性规划也有最优解，且最优目标值相等。
+
+**面包店示例：**
+- 原问题最优：$x_B = 750, x_C = 100, x_M = 0$ → 收入 = $3(750) + 4(100) = 2650$
+- 对偶问题最优：$p_F = 0.03, p_S = 0.05, p_B = 0$（来自笔记本） → 成本通过强对偶匹配 2650
+
+### 影子价格
+
+约束 $i$ 的最优对偶变量 $p_i$ 是**影子价格**。它回答：
+
+> "如果我放松约束 $i$ 一个单位，最优目标会增加多少？"
+
+**面包店解释：**
+- 面粉：$p_F = 0.03$/克 → 额外 1 克面粉增加 $0.03 收入
+- 糖：$p_S = 0.05$/克 → 额外 1 克糖增加 $0.05 收入
+- 黄油：$p_B = 0$/克 → 黄油不是瓶颈（我们有 1000克未使用）
+
+**决策规则：** 如果市场价格 < 影子价格，购买资源。如果面粉成本 $0.02/克，影子价格是 $0.03/克，购买它（净收益 $0.01/克）。
+
+### 互补松弛
+
+在最优性处：
+- 如果原问题变量 $x_j > 0$ → 对应的对偶约束是**紧的**（等式）
+- 如果原问题约束 $i$ 有松弛（左边 < 右边） → 对偶变量 $p_i = 0$
+- 等价地：如果 $p_i > 0$，那么原问题约束 $i$ 是紧的
+
+**面包店检查：**
+- $x_B = 750 > 0$ → 小面包的对偶约束是紧的：$20(0) + 100(0.03) + 0(0.05) = 3$ ✓
+- $x_M = 0$ → 松饼的对偶约束可能有松弛
+- 黄油松弛 = 1000 → $p_B = 0$ ✓
+- 面粉松弛 = 0 → $p_F > 0$ 被允许 ✓
+
+## 3. 面包店示例 — 完整数值演算
+
+已在上面涵盖。关键事实：
+- 原问题最优 = 2650，$(x_B, x_C, x_M) = (750, 100, 0)$
+- 对偶问题最优 = 2650，$(p_B, p_F, p_S) = (0, 0.03, 0.05)$ [近似]
+- 松弛：黄油 1000克、面粉 0、糖 0
+
+**灵敏度：** 以 $0.005/克 购买面粉？是的 — 净收益 每克 0.025。
+
+## 4. 面包店线性规划笔记本 — 单元格演算
+
+**单元格 1：导入**
+```python
+from gurobipy import *
+```
+
+**单元格 3：创建模型、变量、约束、目标**
+```python
+m = Model()
+x_B = m.addVar()
+x_C = m.addVar()
+x_M = m.addVar()
+butter_constr = m.addConstr(20*x_B + 100*x_C + 10*x_M <= 26000)
+flour_constr  = m.addConstr(100*x_B + 50*x_C + 0*x_M <= 80000)
+sugar_constr  = m.addConstr(0*x_B + 50*x_C + 150*x_M <= 5000)
+m.setObjective(3*x_B + 4*x_C + 4.5*x_M, GRB.MAXIMIZE)
+```
+- `addVar()` 创建一个变量，默认下界为 0。
+- `addConstr()` 添加一个约束，返回一个引用以供稍后的 `.pi` 访问。
+
+**单元格 5：求解**
+```python
+m.update()
+m.optimize()
+```
+
+**单元格 10：提取解**
+```python
+print(x_B.X, x_C.X, x_M.X)  # 750, 100, 0
+print(m.objval)              # 2650
+```
+- `.X` = 最优变量值，`.objval` = 最优目标。
+
+**单元格 13：显式求解对偶问题**
+```python
+m_dual = Model()
+p_B = m_dual.addVar()
+p_F = m_dual.addVar()
+p_S = m_dual.addVar()
+m_dual.addConstr(20*p_B + 100*p_F + 0*p_S >= 3)
+m_dual.addConstr(100*p_B + 50*p_F + 50*p_S >= 4)
+m_dual.addConstr(10*p_B + 0*p_F + 150*p_S >= 4.5)
+m_dual.setObjective(26000*p_B + 80000*p_F + 5000*p_S, GRB.MINIMIZE)
+m_dual.optimize()
+```
+
+**单元格 17：直接访问影子价格**
+```python
+dual_values = [butter_constr.pi, flour_constr.pi, sugar_constr.pi]
+```
+约束的 `.pi` = 其影子价格。
+
+**单元格 21：约束松弛**
+```python
+slack_values = [butter_constr.slack, flour_constr.slack, sugar_constr.slack]
+```
+`.slack` = 在最优性处的 右边 − 左边。
+
+## 5. 原问题/对偶问题转换规则
+
+| 原问题 (最小化) | 对偶 | (变量符号) |
+|--------|--------|--------|
+| 约束 ≥ $b_i$ | $p_i \ge 0$ | |
+| 约束 ≤ $b_i$ | $p_i \le 0$ | |
+| 约束 = $b_i$ | $p_i$ 自由 | |
+| 变量 $x_j \ge 0$ | 对偶约束 $p^T A_j \le c_j$ | |
+| 变量 $x_j \le 0$ | 对偶约束 $p^T A_j \ge c_j$ | |
+| 变量 $x_j$ 自由 | 对偶约束 $p^T A_j = c_j$ | |
+
+**对于最大化原问题：** 从右往左读表（符号翻转）。
+
+### 为什么每条规则存在（直觉）
+
+- **最小化原问题中的 ≤ → $p_i \le 0$：** 放松 ≤（增加右边）使可行域变大，只能减少最小目标。所以影子价格是非正的。
+- **最小化原问题中的 ≥ → $p_i \ge 0$：** 放松 ≥ 使区域变小，只能增加最小值。影子价格非负。
+- **= → 自由：** 既是上界又是下界；不能假设符号。
+
+### 已完成的转换（最大化原问题）
+$$\max 4x_1 + 5x_2 \;\text{s.t.}\; x_1 + 2x_2 \le 10,\; -x_1 + x_2 \ge 2,\; x_1 \ge 0,\; x_2 \text{ 自由}$$
+
+应用最大化规则：
+- 约束 1 (≤)：对偶变量 $p_1 \le 0$
+- 约束 2 (≥)：对偶变量 $p_2 \ge 0$
+- 变量 1 (≥0)：对偶约束 $p_1 - p_2 \le 4$
+- 变量 2 (自由)：对偶约束 $2p_1 + p_2 = 5$
+
+**对偶问题：**
+$$\min 10p_1 + 2p_2 \;\text{s.t.}\; p_1 - p_2 \le 4,\; 2p_1 + p_2 = 5,\; p_1 \le 0, p_2 \ge 0$$
+
+## 6. 分步方法
+
+### (a) 从文字问题制定线性规划
+1. 确定决策变量（描述性名称）。
+2. 编写目标：max/min Σ c·x。
+3. 列出约束（资源、市场、混合、非负性）。
+4. 将每个表示为线性不等式/等式。
+5. 验证单位。
+
+### (b) 机械地编写对偶
+1. 确定原问题形式：min/max、约束类型、变量符号。
+2. 为每个原问题约束创建一个对偶变量。
+3. 翻转目标方向。
+4. 转置：原问题约束右边 → 对偶目标系数；原问题变量系数 → 对偶约束右边。
+5. 应用转换表（根据原问题类型读取方向）。
+
+### (c) 使用弱对偶验证最优性
+1. 找到可行的原问题 $x$，计算 $c^T x$。
+2. 找到可行的对偶 $p$，计算 $b^T p$。
+3. 如果 $c^T x = b^T p$：两者都是最优的。
+4. 如果 $c^T x < b^T p$（最大化原问题）：$x$ 可能不是最优的。
+
+### (d) 使用互补松弛
+1. 对于每个原问题约束 $i$：如果 $p_i^* > 0$，约束 $i$ 是紧的。
+2. 对于每个对偶约束 $j$：如果 $x_j^* > 0$，约束 $j$ 是紧的。
+3. 使用紧约束来求解未知数。
+
+### (e) "购买更多资源"决策
+1. 找到影子价格 $p_i^*$。
+2. 比较每单位成本 $q$。
+3. 如果 $q < p_i^*$ → 购买。每单位利润增益 = $p_i^* - q$。
+4. 有效性：仅限小幅变化（灵敏度范围）。
+
+## 7. 常见错误与陷阱
+
+1. **忘记弱对偶需要两者都可行。** 如果你的对偶猜测不可行，你不能应用弱对偶。
+2. **忘记检查原问题方向。** 最小化和最大化在转换表中有翻转的符号规则。
+3. **在非紧约束上使用影子价格。** 松弛 > 0 意味着 $p_i = 0$。
+4. **将影子价格应用于灵敏度范围之外。** 大的变化会使线性近似失效；重新求解。
+5. **忘记对偶变量的非负性。** 从原问题约束类型继承。
+6. **混淆松弛与盈余。** 松弛 = 右边 − 左边，用于 ≤ 约束。
+7. **将影子价格与市场价格混淆。** 影子价格是*隐含*的边际价值，不是市场价格。
+8. **以错误的方向读取转换表的最大化原问题。** 始终先声明"原问题是最大化"。
+9. **忘记单位转换。** $0.03/克 ≠ $30/公斤...双重检查。
+10. **忽视强对偶验证。** 强对偶是你拥有的最简单的最优性测试。
+
+## 8. 考试相关性
+
+**模式 A — 对偶制定：** "编写以下线性规划的对偶。" 5 分钟。使用转换表。
+
+**模式 B — 影子价格决策：** "X 的影子价格是 $Y。以 $Z 购买更多？" 2 分钟。比较 Z 对 Y。注意单位！
+
+**模式 C — 互补松弛推导：** "给定 $x^*$，哪些对偶约束是紧的？" 3 分钟。机械应用。
+
+**模式 D — 最优性验证：** "验证 $x$ 和 $p$ 都是最优的。" 3 分钟。检查可行性 + 目标相等。
+
+**要学习的练习问题：** LP Duality-I（玩具）、LP Duality-II（布料）。
+
+## 9. 迷你练习
+
+### Q1. 从最大化原问题制定对偶
+$$\max 5x + 3y \;\text{s.t.}\; 2x + y \le 8,\; x + 2y \le 6,\; x, y \ge 0$$
+
+**答案（对偶）：**
+$$\min 8p_1 + 6p_2 \;\text{s.t.}\; 2p_1 + p_2 \ge 5,\; p_1 + 2p_2 \ge 3,\; p_1, p_2 \ge 0$$
+
+### Q2. 影子价格解释
+给定最优 $p_1 = 2.2, p_2 = 0.6$。解释 $p_1$；放松约束 1 的效果？
+
+**答案：** $p_1 = 2.2$ = 资源 1 的影子价格。将右边从 8 增加到 9 会使最优值增加约 $2.2。
+
+### Q3. 互补松弛检查
+原问题 $x = 4, y = 0$；对偶 $p_1 = 2.2, p_2 = 0.6$。用互补松弛验证。
+
+**答案：** $x = 4 > 0$ → 对偶约束 1 紧：$2(2.2) + 0.6 = 5$ ✓。$y = 0$ → 对偶约束 2 可能有松弛（$2.2 + 1.2 = 3.4 > 3$ ✓）。$p_1 > 0$ → 原问题约束 1 应该是紧的（$2(4) + 0 = 8$ ✓）。$p_2 > 0$ → 原问题约束 2 应该是紧的（$4 + 0 = 4 ≠ 6$，松弛=2） ❌ 不一致。所以这些不是联合最优的。
+
+### Q4. 购买更多资源
+面粉影子价格 = $0.03/克。以以下价格提供：(a) $0.02/克，(b) $0.04/克，(c) $0.03/克。
+
+**(a)** 购买：净 +$0.01/克。
+**(b)** 不购买：净 −$0.01/克。
+**(c)** 无所谓（边界）。
+
+### Q5. 经济对偶推导
+产品 A（$10 利润、2 劳动力、1 机器）、产品 B（$15 利润、1 劳动力、3 机器）、100 劳动力、80 机器。编写原问题和对偶问题。
+
+**原问题：** $\max 10x_A + 15x_B$ s.t. $2x_A + x_B \le 100$, $x_A + 3x_B \le 80$, $x_A, x_B \ge 0$。
+
+**对偶问题：** $\min 100p_L + 80p_M$ s.t. $2p_L + p_M \ge 10$, $p_L + 3p_M \ge 15$, $p_L, p_M \ge 0$。
+
+解释：竞争对手以价格 $(p_L, p_M)$ 购买所有资源；他们需要每种产品的"购买价格"超过我们通过生产它能获得的利润。
+
+## 10. 速查卡
+
+- **弱对偶（始终）：** 最大化原问题 ≤ 最小化对偶问题。
+- **强对偶（在最优性处）：** 它们相等。
+- **互补松弛：** $x_j > 0$ ↔ 对偶约束 $j$ 紧；$p_i > 0$ ↔ 原问题约束 $i$ 紧。
+- **影子价格决策：** 如果成本 < 影子价格，购买资源。
+- **转换表：** 对最小化原问题从左→右读，对最大化原问题从右→左读。
+- **Gurobi：** `constraint.pi` = 影子价格，`.X` = 变量值，`.slack` = 右边−左边。
+
+---
+
+## 🎙️ 讲座记录深度 — 超越幻灯片
+
+这些笔记捕捉了 Prof. Misic 在 4/1 课堂上说的不在幻灯片中的内容——考试提示、口头解释、学生问答和警告。
+
+### 考试重点的口头线索
+
+- **"强对偶是最简单的最优性检查。"** 如果你计算原问题值 = 对偶问题值，两者都可行 → 完成。比互补松弛快。
+- **"灵敏度范围很重要。"** 影子价格仅在范围内有效。如果考试说"将面粉增加 50%"，那是范围外的 — 你需要重新求解，而不是只乘以影子价格。
+- **面包店线性规划作为线性规划求解，而不是整数规划**，因为对于数千个单位，四舍五入 113,478.248 → 113,478 最多损失 $3。整数松弛是默认值，除非有是/否决策（种类、位置、旅行商问题）。
+- **对偶是列生成的前提条件**（不在考试中，但解释了为什么对偶是基础）。
+
+### 通过重复强调的概念
+
+- **通过约束的正线性组合设定边界的"配方"**（他通过学生尝试三次后给出错误边界后纠正到对偶，走了三遍）。
+- **互补松弛是双向的：**
+  - 松弛 > 0 ⇒ 对偶变量 = 0
+  - 对偶变量 > 0 ⇒ 约束是紧的
+  - 许多学生忘记了反向方向。
+- **影子价格 = 目标对约束右边的导数。** 泰勒展开：$f(x+h) \approx f(x) + f'(x) h$。
+
+### 澄清的口头解释
+
+- **为什么我们不在 Gurobi 中添加非负性：** `addVar()` 默认下界为 0，上界为 ∞。你可以注释掉非负性行。
+- **为什么整数规划破坏对偶：** 对于整数约束，强对偶破裂（你得到拉格朗日对偶 — 边界，不精确）。在 PDF 笔记中提到但超出 W1 范围。不要尝试对整数规划应用影子价格。
+- **经济对偶解释（"Yash 卖原料"故事）：** 原问题 = "决定生产什么。" 对偶 = "竞争对手购买所有原料；价格必须覆盖你通过烘烤每种产品能获得的收益。" 这解释了为什么对偶约束有 ≥（不是 ≤）以及为什么 $p_i \ge 0$。
+
+### 学生问答亮点
+
+- **"我们必须显式求解对偶问题吗？"** 不必 — 单纯形法/内点算法在内部维护对偶。`m.optimize()` 给出两者。对约束引用使用 `.pi`。
+- **"为什么黄油影子价格 = 0，当黄油很好时？"** 因为我们有 1000克未使用。松弛 > 0 ⇒ 价格 = 0。
+- **"影子价格公式是否对任何 $\Delta b$ 都有效？"** 仅在灵敏度范围内。Gurobi 通过 `.SARHSLow` 和 `.SARHSHigh` 报告它。在范围外，其他约束变为紧的。
+
+### 数值演算 — 边界 → 对偶
+
+走过边界构造：
+- 仅黄油约束：边界 = 26,000（松 10 倍）
+- 黄油 × 0.5：边界 = 13,000（松 5 倍）
+- 具有乘数 0.1 的学生尝试：给出无效边界 2,600（系数不满足 ≥）
+- 学生纠正：面粉 × 0.1 + 糖 × 0.1：边界 = 8,500（有效，更紧）
+- 解决对偶的最优边界：2,650（与原问题匹配！）
+
+这是苏格拉底式的动机：学生通过尝试权重发现对偶，然后对偶问题自然出现。
+
+### 灵敏度验证（笔记本实时运行）
+
+| ΔFlour (克) | 预测（影子价格） | 实际 | 匹配？ |
+|---|---|---|---|
+| 0 | 2,650 | 2,650 | ✓ |
+| +100 | 2,650 + 100(0.03) = 2,653 | 2,653 | ✓ (精确) |
+| +1,000 | 2,680 | 2,680 | ✓ (精确，在边界处) |
+| +10,000 | 2,950 | < 2,950 | ❌ (近似失效) |
+
+### 口头标记的警告
+
+1. **永远不要乘以负乘数的约束** — 不等号翻转，边界毁坏。始终 $p_i \ge 0$。
+2. **当约束有松弛时不要应用影子价格。** 松弛 > 0 ⇒ 价格 = 0。
+3. **大幅资源变化会使近似失效。** 当使用影子价格时声明"假设小幅变化"。
+4. **注意单位！** 影子价格 $0.03/克 对比市场价格 $5/公斤 = $0.005/克。比较前转换。
+5. **负对偶价格在标准制定中没有意义**。
+
+### 来自 Prof 风格的考试策略
+
+对于"这个 $(x^*, p^*)$ 是最优的吗？"：
+1. 检查 $x^*$ 在原问题中可行，$p^*$ 在对偶中可行。
+2. 计算两个目标。
+3. 如果相等 → 两者都是最优的（强对偶）。停止。
+4. 仅在你需要知道哪些约束是紧的时才使用互补松弛。
+</script>
+
+<script>
+function renderContent(lang) {
+  const id = (lang === 'zh') ? 'md-zh' : 'md-en';
+  const src = document.getElementById(id).textContent;
+  document.getElementById('content').innerHTML = marked.parse(src);
+  // Swap banner labels too
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
+    // Only update simple text spans (not children)
+    if (el.children.length === 0) el.textContent = txt;
+  });
+  // Re-typeset MathJax
+  setTimeout(() => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([document.getElementById('content')]);
+    }
+  }, 50);
+}
+
+// Initial render based on saved preference
+const initLang = localStorage.getItem('site_lang') || 'en';
+renderContent(initLang);
+
+// Listen for language change events from script.js
+window.addEventListener('langchange', e => renderContent(e.detail));
+</script>
+<script src="script.js"></script>
+</body>
+</html>

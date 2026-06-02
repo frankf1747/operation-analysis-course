@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Night Before Exam | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Mgmt</a>
+<a href="week3.html">Week 3 — Newsvendor</a>
+<a href="week4.html">Week 4 — Location</a>
+<a href="week5.html">Week 5 — Assortment</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — TSP</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html" class="active">🚨 Night Before Exam</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>🚨 Night Before Exam — Crash Review</h1>
+
+<div class="callout warn">Don't learn anything new tonight. Re-skim THIS page, the Formula Sheet, and the practice problems. Sleep early. Trust your prep.</div>
+
+<div class="callout exam">
+<strong>🎙️ CONFIRMED EXAM FACTS (from Prof's 5/27 lecture):</strong>
+<ul style="margin-top:6px">
+<li><strong>Scope:</strong> Weeks 1–8. NOT Weeks 9 (column generation) or 10 (matching).</li>
+<li><strong>Format:</strong> ~6 questions with multiple parts. NOT ALL 8 topics will appear — some may be omitted.</li>
+<li><strong>Calculator:</strong> Non-graphing scientific calculator REQUIRED. Graphing NOT allowed.</li>
+<li><strong>TSP getSubtours code reading is GUARANTEED.</strong> Prof: "I will give you the code; you should be able to predict the output."</li>
+<li><strong>Heaviest emphasis from lectures:</strong> Newsvendor critical fractile, Network Flows (LP formulations), Assortment (no-purchase + cannibalization), TSP (getSubtours + lazy SECs), LP Duality (shadow prices). Pricing and RM secondary but still possible.</li>
+</ul>
+</div>
+
+<h2>The 8 Topics — Recognition Cues</h2>
+<table>
+<tr><th>Topic</th><th>Recognize By</th><th>Primary Tool</th></tr>
+<tr><td>LP Duality (W1)</td><td>"primal/dual", "shadow price", "should I buy more"</td><td>Conversion table; weak duality; $\Delta R = p^* \Delta b$</td></tr>
+<tr><td>RM (W2)</td><td>"fare classes", "capacity over time"</td><td>Capacity LP + bid-price rule</td></tr>
+<tr><td>Newsvendor (W3)</td><td>"single period", "perishable", "uncertain demand"</td><td>$\alpha = c_u/(c_u+c_o)$, invert CDF</td></tr>
+<tr><td>Location (W4)</td><td>"open $p$ facilities", "distance"</td><td>MCLP / p-median / p-center</td></tr>
+<tr><td>Assortment (W5)</td><td>"customer segments + utilities + no-purchase"</td><td>Max-utility, $R(S) = \sum r_i P(i|S)$</td></tr>
+<tr><td>Pricing (W6)</td><td>"price points", "linear demand"</td><td>$d_i = \alpha - \beta p + \gamma$; IP with $x_{i,t}$</td></tr>
+<tr><td>Network Flows (W7)</td><td>"ship from A to B", "supply chain"</td><td>Flow conservation; max-reliability via logs</td></tr>
+<tr><td>TSP (W8)</td><td>"visit each location once and return"</td><td>Degree=1 + SEC + lazy callback</td></tr>
+</table>
+
+<h2>Must-Know Formulas (drill these tonight)</h2>
+<ol>
+<li>$F(Q^*) = c_u / (c_u + c_o) = (p-c)/p$</li>
+<li>Bid-price decision: $r_j \ge \pi$? Accept : Reject</li>
+<li>Flow conservation: $\sum_j x_{ji} + b_i = \sum_j x_{ij}$ at every node</li>
+<li>Triangular CDF: $F(x) = (x-a)^2 / [(b-a)(c-a)]$ for $x \le b$; $1 - (c-x)^2/[(c-b)(c-a)]$ for $x > b$</li>
+<li>Empirical quantile: ⌈$n\alpha$⌉-th sorted value</li>
+<li>TSP SEC: $\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$</li>
+<li>Choice probability: sum of $\lambda_k$ over segments where $i$ is first choice</li>
+<li>Customized UB: $\sum_k \lambda_k \max_{i: u_{k,i} > u_{k,0}} r_i$</li>
+<li>Pricing demand: $d_i = \alpha_i - \beta_i p_i + \sum_{j \ne i} \gamma_{ij} p_j$</li>
+</ol>
+
+<h2>Must-Know Decision Procedures</h2>
+<table>
+<tr><th>Question</th><th>Procedure</th></tr>
+<tr><td>"Is primal optimal?"</td><td>(a) primal feasible? (b) dual feasible? (c) same objective? If all yes → optimal. If dual infeasible → NO conclusion.</td></tr>
+<tr><td>"Should we buy more X?"</td><td>Compare per-unit cost vs shadow price. Buy iff cost < shadow price.</td></tr>
+<tr><td>"How much will revenue change if resource changes by $\Delta$?"</td><td>$\Delta R \approx p^* \cdot \Delta b$.</td></tr>
+<tr><td>"Upper bound on assortment revenue?"</td><td>(a) Customized: $\sum \lambda_k \max r_i$ over relevant products. OR (b) LP relaxation.</td></tr>
+<tr><td>"Why does TSP need SECs?"</td><td>Degree constraints alone allow disconnected subtours (small cycles).</td></tr>
+<tr><td>"Is offering all products optimal?"</td><td>Usually NO. Cannibalization. Need IP.</td></tr>
+<tr><td>"Accept this RM request?"</td><td>Compute (or use given) bid price $\pi$. Accept iff fare ≥ $\pi$ AND capacity available.</td></tr>
+<tr><td>"Compute newsvendor Q*?"</td><td>(1) compute $\alpha$, (2) identify distribution, (3) invert $F$.</td></tr>
+</table>
+
+<h2>Quick Sanity Checks</h2>
+<ul>
+<li>Newsvendor $\alpha < 0.5$ → $Q^* < $ median (order less). $\alpha > 0.5$ → $Q^* > $ median.</li>
+<li>Shadow price = 0 → constraint has slack (resource not fully used).</li>
+<li>Shadow price > 0 → constraint is tight (resource fully used).</li>
+<li>Max-reliability: logs of $r < 1$ are NEGATIVE. Max = LEAST negative sum.</li>
+<li>TSP SECs must include BOTH $x_{ij}$ AND $x_{ji}$.</li>
+<li>Pricing: $\beta > 0$ always; own-price contributes $-\beta p^2$ (subtracted).</li>
+<li>Choice prob: ALWAYS include no-purchase option in argmax.</li>
+<li>Network: SUM of $b_i$ must equal 0 (balanced).</li>
+</ul>
+
+<h2>Universal Side-Constraint Patterns (memorize)</h2>
+<table>
+<tr><th>English</th><th>Constraint</th></tr>
+<tr><td>If $A$ then $B$</td><td>$x_A \le x_B$</td></tr>
+<tr><td>If $A$ then ≥ 1 of $\{B,C,D\}$</td><td>$x_A \le x_B + x_C + x_D$</td></tr>
+<tr><td>If $A$ AND $B$ then $C$</td><td>$x_A + x_B - 1 \le x_C$</td></tr>
+<tr><td>If $A$ then NOT $B$</td><td>$x_A + x_B \le 1$</td></tr>
+<tr><td>At most $K$ per facility</td><td>$\sum_i z_{ij} \le K \cdot x_j$</td></tr>
+<tr><td>Between $m$ and $M$ open</td><td>$m \le \sum x_j \le M$</td></tr>
+</table>
+
+<h2>Common $z_\alpha$ Values</h2>
+<table>
+<tr><th>$\alpha$</th><td>0.10</td><td>0.25</td><td>0.40</td><td>0.50</td><td>0.60</td><td>0.75</td><td>0.80</td><td>0.90</td><td>0.95</td></tr>
+<tr><th>$z_\alpha$</th><td>−1.28</td><td>−0.67</td><td>−0.25</td><td>0</td><td>0.25</td><td>0.67</td><td>0.84</td><td>1.28</td><td>1.65</td></tr>
+</table>
+
+<h2>Triangular Distribution Quick Reference</h2>
+<p><strong>Tr$[a, b, c]$:</strong> a=low, b=mode, c=high.</p>
+<p><strong>Inverse CDF:</strong></p>
+<ul>
+<li>$F(b) = (b-a)/(c-a)$ — check which branch.</li>
+<li>If $\alpha \le F(b)$: $Q^* = a + \sqrt{\alpha(b-a)(c-a)}$</li>
+<li>If $\alpha > F(b)$: $Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$</li>
+</ul>
+<p><strong>Mean:</strong> $(a+b+c)/3$.</p>
+
+<h2>The Morning Of</h2>
+<ul>
+<li>Bring scientific calculator (non-graphing).</li>
+<li>Bring extra pencils/pens.</li>
+<li>Read entire exam first; identify easy problems.</li>
+<li>Do easy problems first; bank points.</li>
+<li>For formulation: ALWAYS define variables before writing model.</li>
+<li>For "no Σ notation": enumerate every variable explicitly.</li>
+<li>Double-check inequality directions in dual constraints.</li>
+<li>If you blank: write the formula sheet from memory in the margin to jog your brain.</li>
+<li>Reserve 15 minutes at end to review.</li>
+</ul>
+
+<div class="callout key">
+🍀 <strong>You've got this.</strong> Most points are won by:
+<br>(1) Clear variable definitions,
+<br>(2) Correct formula application,
+<br>(3) Showing work for partial credit.
+<br><br>
+Don't get fancy. Stick to the templates. Trust your preparation.
+</div>
+
+<h2>🎙️ Direct Quotes From Prof Misic's Final Class (5/27)</h2>
+<div class="callout info">
+<em>"Basically everything through the end of the week, which we just finished, all of that is fair game for the final exam. So any of those topics from LP duality to traveling salesman problem, which we just finished, all of that can show up in the exam."</em>
+<br><br>
+<em>"What we're going to start now is column generation, which I will not test you on the exam."</em>
+<br><br>
+<em>"If you go through the practice problems on your own, you should be fine in the exam."</em>
+<br><br>
+<em>"If you did the homework on your own [without copying to ChatGPT at 11pm], you will be fine with the exam."</em>
+<br><br>
+<em>"If I ask you what's the output [of getSubtours]... you should be able to do that."</em>
+</div>
+
+<h2>Top 10 Things To Re-Verify Before Walking In</h2>
+<ol>
+<li>I can write the dual of any primal LP using the conversion table.</li>
+<li>I can invert a triangular CDF (both branches) for newsvendor.</li>
+<li>I know empirical quantile = ⌈$n\alpha$⌉-th sorted value.</li>
+<li>I can compute first-choice probabilities for an assortment (including no-purchase!).</li>
+<li>I can write the bid-price decision rule for multi-leg requests.</li>
+<li>I can write flow conservation EXPLICITLY at every node (no Σ).</li>
+<li>I can translate max-reliability into a shortest-path problem via $-\log$.</li>
+<li>I can trace getSubtours line-by-line for a given sequence.</li>
+<li>I can write the SECs added by a lazy callback for a given subtour list.</li>
+<li>I can identify if a partial pricing IP is missing BOTH linking directions of $y$.</li>
+</ol>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

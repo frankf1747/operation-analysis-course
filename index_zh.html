@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MGMTMSA 408 — 期末复习</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <h1>MGMTMSA 408</h1>
+  <p class="subtitle">运筹分析 — 期末复习</p>
+  <nav>
+    <a href="index_zh.html" class="active">🏠 学习仪表板</a>
+    <a href="strategy_zh.html">🎯 考试策略</a>
+    <a href="week1.html">第1周 — LP对偶</a>
+    <a href="week2.html">第2周 — 收益管理</a>
+    <a href="week3.html">第3周 — 报童</a>
+    <a href="week4.html">第4周 — 选址</a>
+    <a href="week5.html">第5周 — 品类选择</a>
+    <a href="week6.html">第6周 — 定价</a>
+    <a href="week7.html">第7周 — 网络流</a>
+    <a href="week8.html">第8周 — 旅行商问题</a>
+    <a href="formulas_zh.html">📐 公式表</a>
+    <a href="templates_zh.html">🧩 问题模板</a>
+    <a href="crash_zh.html">🚨 考前冲刺复习</a>
+  </nav>
+</aside>
+
+<main>
+
+<section>
+<h1>🏠 学习仪表板</h1>
+
+<div class="callout exam">
+<strong>🎙️ 来自Misic教授最后一节课的确认信息(2026年5月27日):</strong>
+<ul style="margin-top:6px">
+<li><strong>考试范围:</strong> <span class="hl">仅限第1-8周</span>。教授原话:<em>"从LP对偶到旅行商问题,所有这些都可能出现在考试中。"</em></li>
+<li><strong>确认不考:</strong> 列生成(第9周)、匹配(第10周)。教授:<em>"我不会考你们列生成。"</em></li>
+<li><strong>考试结构:</strong> <span class="hl">约6道大题,每题多个小问</span>。并非全部8个主题都会涵盖 — 有些可能被省略。</li>
+<li><strong>计算器:</strong> 必须使用非图形科学计算器(亚马逊约15美元)。不允许使用图形计算器。</li>
+<li><strong>TSP的getSubtours代码阅读必考:</strong> 教授确认<em>"我会给你们这段代码……你们应该能读懂它并告诉我输出是什么。"</em></li>
+</ul>
+</div>
+
+<div class="callout info">
+<strong>课程:</strong> MGMTMSA 408 — 运筹分析(UCLA Anderson Velibor Misic教授)<br>
+<strong>形式:</strong> 闭卷,不可携带笔记。<br>
+<strong>建议学习流程:</strong> 在屏幕左侧打开某一周的HTML页面,在右侧打开课件PDF(链接在每周页面顶部)。每个周页面现在都包含"🎙️ 课堂录音洞察"部分,记录教授在课堂上讲过但没放在幻灯片里的口头解释、学生问答以及警示。
+</div>
+
+<h2>如何使用本网站(每周约1.5小时)</h2>
+<ol>
+<li><strong>在侧边栏点击某一周</strong> — 每个页面都有逐张幻灯片的深入讲解,并附有notebook代码解释。</li>
+<li><strong>从上到下阅读。</strong> 各章节先讲直觉(大局观),再推导数学,然后讲解notebook,最后是练习题。</li>
+<li><strong>每个公式都要停下来。</strong> 重新推导。代入已解例题中的数字。</li>
+<li><strong>在查看答案之前,先做每周末尾的迷你练习。</strong></li>
+<li><strong>在第7天(考前一晚)复习公式表和冲刺复习页面。</strong></li>
+</ol>
+
+<h2>教授考试准备语录(5/27)</h2>
+<div class="callout key">
+<em>"如果你独立完成了练习题,考试应该没问题。"</em><br>
+<em>"如果你自己做了作业(没有在晚上11点复制粘贴到ChatGPT),考试就会很顺利。"</em>
+</div>
+
+<h2>优先级排序</h2>
+<table class="priority">
+<tr><th>优先级</th><th>主题</th><th>原因</th></tr>
+<tr class="high"><td>🔴 高</td><td>LP对偶(第1周)</td><td>基础知识。影子价格在收益管理、选址、品类选择、网络流中反复出现。2道练习题。</td></tr>
+<tr class="high"><td>🔴 高</td><td>报童(第3周)</td><td>考察4种不同的变体:均匀分布、三角分布、正态分布、回归树、线性回归。</td></tr>
+<tr class="high"><td>🔴 高</td><td>品类选择(第5周)</td><td>多部分练习题(10个小问!)。选择概率 + 整数规划 + 5个附加约束 + 2种上界方法。</td></tr>
+<tr class="high"><td>🔴 高</td><td>网络流(第7周)</td><td>大型LP问题(生产+运输,带明确数字,无Σ求和符号)。外加通过对数实现最大可靠性。</td></tr>
+<tr class="high"><td>🔴 高</td><td>旅行商问题(第8周)</td><td>逐行追踪getSubtours代码。写出回调添加的SEC约束。修改建模公式。</td></tr>
+<tr class="med"><td>🟡 中</td><td>选址(第4周)</td><td>建立MCLP / p-中位 / p-中心模型。添加附加约束。比较强弱建模公式。</td></tr>
+<tr class="med"><td>🟡 中</td><td>收益管理(第2周)</td><td>建立容量LP。应用投标价格规则。与LP上界进行验证。</td></tr>
+<tr class="med"><td>🟡 中</td><td>定价(第6周)</td><td>计算需求/收入。识别部分IP中缺失的约束。</td></tr>
+<tr class="low"><td>⚪ 不考</td><td>列生成(第9周)、匹配(第10周)</td><td>已确认排除。</td></tr>
+</table>
+
+<h2>7天学习计划</h2>
+<table>
+<tr><th>天数</th><th>重点</th><th>行动</th></tr>
+<tr><td>1</td><td>第1周 + 第3周</td><td>LP对偶 + 报童。完成LP对偶-I(玩具题)、报童-I(咖啡题)。</td></tr>
+<tr><td>2</td><td>第5周 + 第7周</td><td>品类选择 + 网络流。完成品类选择-I、网络流-I(Psyche题)。</td></tr>
+<tr><td>3</td><td>第8周 + 第4周</td><td>旅行商问题 + 选址。手工追踪getSubtours。练习TSP-I。</td></tr>
+<tr><td>4</td><td>第2周 + 第6周</td><td>收益管理 + 定价。重新推导投标价格逻辑。定价缺失约束题。</td></tr>
+<tr><td>5</td><td>完整模拟考试</td><td>所有练习题闭卷限时完成。给每道题打分。</td></tr>
+<tr><td>6</td><td>薄弱主题</td><td>重读得分最差的几周。重做那些题目。</td></tr>
+<tr><td>7</td><td>冲刺复习</td><td>"考前冲刺复习"页面 + 公式表。早点睡觉。</td></tr>
+</table>
+
+<h2>必学清单</h2>
+<ul class="checklist">
+<li><label><input type="checkbox"> LP对偶:原问题↔对偶问题转换(约束类型 ↔ 变量符号)</label></li>
+<li><label><input type="checkbox"> 弱对偶性 + 互补松弛性</label></li>
+<li><label><input type="checkbox"> 影子价格决策:"以$Y的价格购买更多资源?"</label></li>
+<li><label><input type="checkbox"> 收益管理的容量控制LP</label></li>
+<li><label><input type="checkbox"> 投标价格规则:当且仅当票价 ≥ 所用资源影子价格之和时接受</label></li>
+<li><label><input type="checkbox"> 报童临界分位数 $F(Q^*) = c_u/(c_u+c_o)$</label></li>
+<li><label><input type="checkbox"> 均匀分布 / 三角分布 / 正态分布的CDF反演</label></li>
+<li><label><input type="checkbox"> 来自排序数据的经验分位数(第⌈nα⌉个值)</label></li>
+<li><label><input type="checkbox"> 上下文报童:回归树叶子节点分位数</label></li>
+<li><label><input type="checkbox"> 线性回归上下文模型:$\hat{\mu}(x) + z_\alpha \hat{\sigma}$</label></li>
+<li><label><input type="checkbox"> MCLP、p-中位、p-中心建模公式</label></li>
+<li><label><input type="checkbox"> 强约束 vs 弱约束:$z_{ij} \le x_j$ 优于 $\sum z \le m \cdot x$</label></li>
+<li><label><input type="checkbox"> 首选(最大效用)品类选择概率</label></li>
+<li><label><input type="checkbox"> 品类选择IP问题,含 $x_i, y_{k,i}$ + 最大效用约束</label></li>
+<li><label><input type="checkbox"> 两种上界方法(定制化、LP松弛)</label></li>
+<li><label><input type="checkbox"> 线性需求模型:$d_i = \alpha_i - \beta_i p_i + \sum \gamma_{ij} p_j$</label></li>
+<li><label><input type="checkbox"> 定价IP:每个产品一个价格 + 两个方向的关联约束</label></li>
+<li><label><input type="checkbox"> 每个节点的流量守恒(转运节点:流入=流出)</label></li>
+<li><label><input type="checkbox"> 带明确数字的生产+运输LP</label></li>
+<li><label><input type="checkbox"> 分段成本:低价段变量有上限 + 超额变量</label></li>
+<li><label><input type="checkbox"> 通过对数变换将最大可靠性问题转为最短路径问题</label></li>
+<li><label><input type="checkbox"> 路径上的附加约束:"如果A→C且C→E,则J→L" → $x_{AC}+x_{CE}-1 \le x_{JL}$</label></li>
+<li><label><input type="checkbox"> TSP度=1约束 + SEC约束</label></li>
+<li><label><input type="checkbox"> 逐行追踪getSubtours</label></li>
+<li><label><input type="checkbox"> 写出懒回调添加的SEC约束</label></li>
+</ul>
+
+<h2>必背 vs 必理解 vs 必练习</h2>
+<div class="callout warn">
+<strong>必背:</strong>
+<ul>
+<li>原问题→对偶问题转换表</li>
+<li>报童临界分位数公式</li>
+<li>三角分布的CDF及其反函数(很可能会提供,但保险起见要记住)</li>
+<li>流量守恒方程</li>
+<li>TSP度约束 + SEC公式</li>
+<li>投标价格决策规则</li>
+<li>附加约束模式(如果A则B;至多K个;等等)</li>
+</ul>
+</div>
+
+<div class="callout key">
+<strong>必理解(不用死记):</strong>
+<ul>
+<li>为什么TSP中仅有度约束会失败(子环路)</li>
+<li>为什么对数变换能把最大可靠性问题转为最短路径问题</li>
+<li>为什么定制化上界 > 可达收入(异质客户群)</li>
+<li>为什么LP松弛给出上界(可行域更大)</li>
+<li>为什么强约束求解更快(LP界更紧)</li>
+</ul>
+</div>
+
+<div class="callout info">
+<strong>必练习(直到自动反应):</strong>
+<ul>
+<li>从文字题写出LP建模公式(变量 → 目标函数 → 约束)</li>
+<li>手工追踪Python代码(getSubtours、回归树叶子节点查找)</li>
+<li>对分段密度函数积分以求期望利润</li>
+<li>从题目文字识别问题类型(TSP vs 最短路径 vs MCNF vs p-中位)</li>
+</ul>
+</div>
+
+</section>
+
+</main>
+<script src="script.js"></script>
+</body>
+</html>

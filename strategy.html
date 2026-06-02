@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Exam Strategy | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html" class="active">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Mgmt</a>
+<a href="week3.html">Week 3 — Newsvendor</a>
+<a href="week4.html">Week 4 — Location</a>
+<a href="week5.html">Week 5 — Assortment</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — TSP</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>🎯 Exam Strategy</h1>
+
+<div class="callout exam">
+<strong>🎙️ CONFIRMED FROM PROF (5/27 final lecture):</strong>
+<ul style="margin-top:6px">
+<li>Scope: Weeks 1–8 only.</li>
+<li><strong>~6 questions with multiple parts.</strong></li>
+<li><strong>Not all 8 topics will be covered.</strong> Some weeks may be omitted entirely from the exam.</li>
+<li>Non-graphing scientific calculator REQUIRED.</li>
+<li><strong>TSP getSubtours code-reading question is guaranteed.</strong></li>
+<li>Prof's #1 prep advice: <em>"Go through the practice problems on your own."</em></li>
+</ul>
+</div>
+
+<h2>Format (Confirmed)</h2>
+<ul>
+<li><strong>Closed book, closed notes.</strong> Only non-graphing scientific calculator.</li>
+<li><strong>Supplemental materials provided:</strong> LP duality cheat sheet, specific density functions, particular integrals.</li>
+<li><strong>Coverage:</strong> Weeks 1–8 only. <span class="warn">Weeks 9 (column generation) and 10 (matching) confirmed NOT on exam.</span></li>
+<li><strong>Length:</strong> ~6 multi-part questions.</li>
+</ul>
+
+<h2>Skills Tested</h2>
+<table>
+<tr><th>Skill</th><th>Where</th><th>Example</th></tr>
+<tr><td><strong>LP/IP formulation</strong></td><td>All topics</td><td>"Formulate this as an integer program. No Σ notation."</td></tr>
+<tr><td><strong>Constraint modification</strong></td><td>Location, Assortment, Pricing, TSP, Network</td><td>"How would you also require K customers per facility?"</td></tr>
+<tr><td><strong>Hand calculation</strong></td><td>Newsvendor, Assortment, Pricing</td><td>"Calculate the optimal newsvendor quantile from this density."</td></tr>
+<tr><td><strong>Reading Python code</strong></td><td>TSP (getSubtours), maybe RM/Newsvendor</td><td>"Predict the output of getSubtours for this sequence."</td></tr>
+<tr><td><strong>Optimality interpretation</strong></td><td>Duality</td><td>"Is the primal solution optimal? Why?"</td></tr>
+<tr><td><strong>Upper bound argument</strong></td><td>Assortment, RM, LP relaxation</td><td>"Find an upper bound without solving an IP."</td></tr>
+<tr><td><strong>Decision (buy more X?)</strong></td><td>Duality, Network</td><td>"Should we buy more flour at $0.02/g?"</td></tr>
+</table>
+
+<h2>Question Patterns (Direct from Prof's Slides)</h2>
+
+<h3>LP Duality</h3>
+<ul>
+<li>Formulate this problem as a linear program.</li>
+<li>Formulate the dual problem of this LP.</li>
+<li>Given a primal solution and a dual solution, is the primal optimal? (Use weak duality.)</li>
+<li>Given the optimal dual, what does this imply about resource A's usage? (Complementary slackness.)</li>
+<li>Suppose we increase quantity of this resource by 100 units. How much does profit change?</li>
+</ul>
+
+<h3>Revenue Management</h3>
+<ul>
+<li>Formulate the capacity control problem as an LP.</li>
+<li>Design an algorithm using the LP for dynamic accept/reject.</li>
+<li>At time $t$ with $X$ units of resource 1, $Y$ units of resource 2, which request types accept?</li>
+<li>Expected number of arrivals of customer type 5 over horizon?</li>
+<li>Someone claims algorithm achieves expected revenue 110, LP value is 100. Believable?</li>
+</ul>
+
+<h3>Newsvendor</h3>
+<ul>
+<li>Sorted data of historical demands, $p = 10$, $c = 3$. Recommended order?</li>
+<li>Given density function, $p$, $c$ — what order quantity? (Integrate to CDF, invert.)</li>
+<li>Historical data with regression tree. Given new context, how much to order?</li>
+<li>Linear regression output. Recommend order quantity. (Conditional normal.)</li>
+</ul>
+
+<h3>Location</h3>
+<ul>
+<li>Formulate this problem as max coverage / p-median / p-center.</li>
+<li>Write two different formulations of p-median. Which is better and why?</li>
+<li>Modify to require each location serves at most $K$ customers.</li>
+</ul>
+
+<h3>Assortment</h3>
+<ul>
+<li>Given utility table, calculate choice probabilities for $S = \{1, 3, 4\}$.</li>
+<li>Calculate expected per-customer revenue of $S = \{1, 3, 4\}$.</li>
+<li>Upper bound on best possible revenue.</li>
+<li>Formulate the general assortment problem as an IP.</li>
+<li>Code + output (LP relaxation). Claim of revenue $X$. Believable?</li>
+</ul>
+
+<h3>Pricing</h3>
+<ul>
+<li>Linear demand model parameters. Calculate demand for given prices. Calculate revenue.</li>
+<li>Formulate pricing as IP.</li>
+<li>Partial formulation given. Which constraints are missing?</li>
+</ul>
+
+<h3>Network Flows</h3>
+<ul>
+<li>Word description of supply chain. Formulate as LP. Numbers explicit, no Σ.</li>
+<li>Decide a route A to Z. With side constraints. Formulate as IP.</li>
+</ul>
+
+<h3>TSP</h3>
+<ul>
+<li>TSP formulation missing SECs — why does it fail?</li>
+<li>Given solution $x$ and Python code, what is output of getSubtours?</li>
+<li>From getSubtours output, write SECs added by lazy callback.</li>
+<li>Word description of problem. Formulate as IP (recognize TSP).</li>
+</ul>
+
+<h2>What to Memorize</h2>
+<div class="callout warn">
+<ul>
+<li>Primal→Dual conversion table (constraints↔variables)</li>
+<li>Newsvendor critical fractile formulas</li>
+<li>Triangular distribution PDF, CDF, and inverse (likely provided — but be safe)</li>
+<li>Flow conservation equation: inflow + supply = outflow + demand</li>
+<li>TSP degree=1 + SEC ≤ |S| − 1</li>
+<li>Bid-price decision rule: fare ≥ Σ shadow prices</li>
+<li>Side-constraint patterns (if A then B; at most K; etc. — see Templates page)</li>
+</ul>
+</div>
+
+<h2>What to Understand</h2>
+<div class="callout key">
+<ul>
+<li><strong>Why</strong> degree constraints alone fail in TSP (subtours allowed)</li>
+<li><strong>Why</strong> log-transform converts max-reliability to shortest path</li>
+<li><strong>Why</strong> customized bound > achievable revenue (per-segment customization)</li>
+<li><strong>Why</strong> shadow price = marginal value at boundary</li>
+<li><strong>Why</strong> LP relaxation gives upper bound for IP</li>
+<li><strong>Why</strong> strong constraints give faster solves (tighter LP)</li>
+</ul>
+</div>
+
+<h2>What to Practice</h2>
+<div class="callout info">
+<ul>
+<li>Write LP formulations completely (define every variable; expand all constraints; no Σ if asked).</li>
+<li>Trace Python code by hand — especially <code>getSubtours</code> and regression tree leaf prediction.</li>
+<li>Integrate piecewise-defined densities to compute expected profit (triangular newsvendor).</li>
+<li>Identify problem type from a single sentence description.</li>
+<li>Do all 9 practice problems WITHOUT looking at solutions first.</li>
+</ul>
+</div>
+
+<h2>Time Management on Exam Day</h2>
+<ol>
+<li><strong>First 5 minutes:</strong> Skim the whole exam. Identify easy problems.</li>
+<li><strong>Do easy first.</strong> Bank points before tackling long problems.</li>
+<li><strong>For formulation problems:</strong> Always start by defining variables clearly. Half the points often come from that.</li>
+<li><strong>For "no Σ" questions:</strong> Take your time enumerating. Skipping a variable loses big points.</li>
+<li><strong>For trace problems:</strong> Draw the cycles visually. Don't just stare at code.</li>
+<li><strong>Show work:</strong> Even if final answer is wrong, partial credit for correct setup.</li>
+<li><strong>Reserve 15 minutes</strong> at end to review every answer.</li>
+</ol>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

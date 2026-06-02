@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 2 — Revenue Management | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html" class="active">Week 2 — Revenue Management</a>
+<a href="week3.html">Week 3 — Newsvendor Problem</a>
+<a href="week4.html">Week 4 — Location Models</a>
+<a href="week5.html">Week 5 — Assortment Optimization</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — Traveling Salesman</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+<main>
+<div class="week-banner">
+<div class="week-meta">
+<span class="week-num" data-en="Week 2" data-zh="第2周">Week 2</span>
+<h1><span data-en="Revenue Management" data-zh="收益管理">Revenue Management</span> <span class="cn">收益管理</span></h1>
+<p class="topics" data-en="Capacity control LP, bid-price control, single-leg & multi-leg, dynamic re-solving" data-zh="Capacity control LP, bid-price control, single-leg & multi-leg, dynamic re-solving">Capacity control LP, bid-price control, single-leg & multi-leg, dynamic re-solving</p>
+</div>
+<div class="open-pdf">
+<strong><span data-en="📖 Open lecture PDF alongside:" data-zh="📖 同时打开讲义PDF：">📖 Open lecture PDF alongside:</span></strong><br>
+<code>../2/Lecture2_RevenueManagement_v1.pdf</code>
+</div>
+</div>
+<article id="content" class="markdown-body"></article>
+</main>
+
+<script id="md-en" type="text/markdown"># Week 2 — Revenue Management
+
+## 0. Big Picture: The Airline Industry Story
+
+Revenue management (收益管理) grew from a crisis in the airline industry. In 1978, the Airline Deregulation Act allowed airlines to set prices freely. Low-cost carriers like PEOPLExpress undercut major airlines' fares by 50-70%, capturing leisure passengers. American Airlines' VP Robert Crandall realized: *filling a seat costs almost nothing once the plane is flying.* American could offer "Ultimate Super Saver" deeply-discounted fares for leisure travelers while still charging business travelers premium prices.
+
+**The Crisis:** Between 1978-2002, over 100 airlines went bankrupt. **The Solution:** capacity control (容量控制) — selling only a limited number of discount seats per flight, decided dynamically as departure approaches. American credits RM with $1.4 billion in incremental revenue (1988-1991). This was the birth of modern yield management.
+
+## 1. The Setting — Why Capacity Allocation is Hard
+
+Flight: 160 seats, sold over 200 days.
+- Customer A (period 10): wants $80 economy seat
+- Customer B (period 195): would pay $500 business class
+
+**Tradeoff (核心权衡):**
+- Accept A now: get $80, lose ability to sell to B
+- Wait for B: preserve capacity, but B might never arrive
+
+**Opportunity cost (机会成本):** The value of a seat = expected revenue you'd miss if you used it now.
+
+## 2. Single-Leg RM Walkthrough
+
+### Setup
+- Capacity $C = 160$ seats
+- $K = 10$ fare classes with revenues $r_j$ ($100 to $500)
+- Time horizon $T = 200$ periods
+- Each period at most one arrival, class $j$ with probability $p_j$
+- Expected demand: $E[D_j] = T \cdot p_j$
+
+### Myopic Policy (Accept-Everything)
+```
+If b > 0: ACCEPT
+Else: REJECT
+```
+Why it fails: fills 160 seats with $80 fares, leaves no room for $500 fares later. Mean revenue ≈ $27,788.
+
+### Deterministic LP
+**Decision:** $x_j$ = number of class-$j$ to accept.
+
+**Formulation:**
+$$\max \sum_{j=1}^{K} r_j x_j$$
+$$\text{s.t. } \sum_{j=1}^{K} x_j \le C \quad \text{(capacity)}$$
+$$x_j \le E[D_j] = T p_j \quad \text{(demand cap)}$$
+$$x_j \ge 0$$
+
+**Numerical example:** $K=10$, revenues $[100,115,120,140,150,210,220,400,450,500]$, probabilities $[0.16,0.16,0.14,0.1,0.1,0.08,0.06,0.05,0.04,0.02]$, $T=200$, $C=160$.
+
+Forecast = $T \cdot p$ = $[32,32,28,20,20,16,12,10,8,4]$. Total = 182 > 160 capacity.
+
+**Optimal allocation:** $[10, 32, 28, 20, 20, 16, 12, 10, 8, 4]$. LP value = $29,440. Class 1 ($100) gets throttled to 10; higher classes get full forecast.
+
+## 3. Bid-Price Control 投标价格控制
+
+**Bid price** $\pi_\ell$ = shadow price of the capacity constraint = marginal value of one more seat.
+
+### Decision Rule
+At time $t$ with $b$ seats remaining:
+1. Solve LP$(t, b)$ with remaining demand $(T-t+1) p_j$
+2. Get shadow price $\pi_t(b)$ of capacity constraint
+3. **Accept request $j$ if $r_j \ge \pi_t(b)$** AND seats available
+
+### Intuition
+- $\pi$ = opportunity cost of using a seat now (vs. saving for higher fare later)
+- Accept only if fare exceeds opportunity cost
+- $\pi$ INCREASES as $t$ approaches departure (less time for high fares to arrive)
+- $\pi$ INCREASES as $b$ decreases (scarcity)
+
+### Numerical Example
+At $t = 100$, $b = 50$ seats, $\pi = 200$:
+- Class A ($150): $150 < 200$ → REJECT
+- Class B ($200): $200 \ge 200$ → ACCEPT
+- Class C ($180): $180 < 200$ → REJECT
+
+## 4. Single-Leg Notebook — Cell Walkthrough
+
+**Cell 1: Data setup**
+```python
+revenue = [100,115,120,140,150,210,220,400,450,500]
+probability = [0.16,0.16,0.14,0.1,0.1,0.08,0.06,0.05,0.04,0.02]
+B = 160; T = 200
+forecast = T * probability  # = [32,32,28,...,4]
+```
+
+**Cell 3: Solve static LP**
+```python
+m = Model()
+x = m.addVars(nFares, lb=0, ub=forecast)
+seat_constr = m.addConstr(quicksum(x[i] for i in range(nFares)) <= B)
+m.setObjective(quicksum(revenue[i]*x[i] for i in range(nFares)), GRB.MAXIMIZE)
+m.optimize()
+# LP_obj = 29440
+```
+
+**Cell 6: bpc() function**
+```python
+def bpc(b, t):
+    seat_constr.rhs = b
+    for i in range(nFares):
+        x[i].ub = (T-t)*probability[i]
+    m.optimize()
+    return seat_constr.pi
+```
+- `bpc(160, 0)` → π = 100
+- `bpc(20, 99)` → π = 210 (scarcity)
+
+**Cell 13: Simulate bid-price policy**
+```python
+for s in range(100):
+    revenue_s, b = 0, 160
+    for t in range(T):
+        fare = arrival_sequence[t]
+        if fare < nFares:  # not "no arrival"
+            dual = bpc(b, t)
+            if revenue[fare] >= dual:
+                b -= 1
+                revenue_s += revenue[fare]
+# Mean revenue ≈ 29,329 (99.6% of LP bound)
+```
+
+**Cell 19: Myopic baseline** → Mean revenue 27,788. Gap with bid-price = 5.5%. With fixed cost of $26,000, **profit improvement = 86%**.
+
+## 5. Multi-Leg / Network RM
+
+### Setup
+Multiple flight legs sharing capacity:
+- $M$ legs, capacity $b_\ell$ each
+- $n$ itineraries (some single-leg, some multi-leg using 2+ legs)
+- Itinerary $i$ uses leg $\ell$ if $a_{\ell i} = 1$
+
+### LP
+$$\max \sum_i r_i x_i$$
+$$\text{s.t. } \sum_{i: a_{\ell i}=1} x_i \le b_\ell \quad \forall \ell$$
+$$x_i \le E[D_i] = T p_i$$
+$$x_i \ge 0$$
+
+### Bid-Price Rule for Multi-Leg
+Itinerary $i$ uses legs in set $S_i$. Accept iff:
+$$r_i \ge \sum_{\ell \in S_i} \pi_\ell$$
+
+**Example:** Itinerary BOS→SLC→LAX uses legs 0 and 3. If $\pi_0 = 50, \pi_3 = 40$, total bid price = 90. Accept if fare ≥ 90.
+
+## 6. Multi-Leg Notebook Walkthrough
+
+Network: 4 legs (BOS→SLC, JFK→SLC, SLC→SFO, SLC→LAX), 8 itineraries (4 direct + 4 connecting).
+
+```python
+itineraries_to_legs = [[0],[1],[2],[3],[0,2],[0,3],[1,2],[1,3]]
+```
+
+Solve LP → optimal revenue 132,400. Dynamic bid-price policy mean = 130,298 (1.59% gap). Myopic = 124,422 (4.7% lower).
+
+## 7. Expected Arrivals — Math
+
+### Bernoulli (Discrete Time)
+- Per period, class $j$ arrives with probability $p_j$
+- Expected arrivals over $[t, T]$: $E[D_j(t,T)] = (T-t+1) p_j$
+
+### Poisson (Continuous Time)
+- Rate $\lambda_j$ per unit time
+- Expected arrivals over $[t, T]$: $E[N_{t,T,j}] = \lambda_j (T-t)$
+
+## 8. Algorithm Pseudocode
+
+```
+b ← C
+revenue ← 0
+FOR t = 1 to T:
+    Solve LP(t, b):
+        max Σ r_i x_i
+        s.t. Σ a_{ℓi} x_i ≤ b_ℓ  ∀ℓ
+             x_i ≤ (T-t) p_i  ∀i
+    π ← shadow prices of capacity constraints
+    Observe request type i
+    IF i is real AND r_i ≥ Σ_{ℓ in legs(i)} π_ℓ AND b[ℓ] > 0 for all ℓ:
+        ACCEPT: revenue += r_i; b[ℓ] -= 1 for each ℓ in legs(i)
+RETURN revenue
+```
+
+## 9. Common Mistakes ⚠️
+
+1. **Confusing demand with allocation.** Forecast = max demand; allocation = optimal accept count.
+2. **Ignoring opportunity cost.** Don't accept just because seat is empty — compare to bid price.
+3. **Static vs dynamic confusion.** LP gives static allocation; bid-price re-solves dynamically.
+4. **Wrong leg accounting.** Multi-leg requests use SUM of bid prices over legs they use.
+5. **Treating bid price as fixed.** $\pi_t(b)$ varies with time and capacity.
+6. **Forgetting demand cap.** Without $x_j \le E[D_j]$, LP allocates everything to highest fare.
+7. **Claiming impossible revenue.** LP value is UPPER BOUND on achievable expected revenue.
+
+## 10. Exam Relevance
+
+Practice exam slide explicitly lists 5 RM question types:
+1. "Formulate the capacity control LP for this scenario."
+2. "Design an algorithm using the LP for dynamic accept/reject."
+3. "At time t with X seats remaining, shadow price = Y. Which request types accept?"
+4. "Given arrival probabilities, expected arrivals of type 5 over horizon?"
+5. "Someone claims policy achieves $X. LP value is $Y. Believable?"
+
+## 11. Mini Practice
+
+**Q1.** Hotel: 100 rooms, 10 nights. Class A($80, p=0.05/night), B($120, 0.06), C($200, 0.02). Write LP.
+
+**Answer:** $\max 80x_A + 120x_B + 200x_C$ s.t. $x_A + x_B + x_C \le 100$, $x_A \le 0.5, x_B \le 0.6, x_C \le 0.2$, $x \ge 0$.
+
+**Q2.** $\pi = 180$. Accept fare $r_j = 200$? **Yes** (200 ≥ 180).
+
+**Q3.** Multi-leg fare $85, uses 2 legs with $\pi_1 = 50, \pi_2 = 40$. **REJECT** ($85 < 90$).
+
+**Q4.** LP optimum = $30k. Policy claims $35k revenue. **Not possible** — LP is upper bound.
+
+**Q5.** $T = 200, p_J = 0.05$. Expected J arrivals from $t = 150$? $(200-150+1)(0.05) = 51 \times 0.05 = 2.55$.
+
+## 12. Cheat Card
+
+| Concept | Formula |
+|---|---|
+| Capacity LP | $\max \sum r_j x_j$ s.t. $\sum x_j \le C$, $x_j \le E[D_j]$ |
+| Bid price = | shadow price of capacity constraint |
+| Single-leg rule | Accept iff $r_j \ge \pi_t(b)$ |
+| Multi-leg rule | Accept itin $i$ iff $r_i \ge \sum_{\ell \in S_i} \pi_\ell$ |
+| Bernoulli arrivals | $E[D_j] = (T-t+1) p_j$ |
+| Poisson arrivals | $E[N] = \lambda_j (T-t)$ |
+| LP value = | upper bound on expected revenue |
+
+**Key intuition:** Bid price = opportunity cost. Accept iff fare ≥ opportunity cost. Re-solve at each request.
+
+---
+
+## 🎙️ Lecture Transcript Insights — Beyond the Slides
+
+From Prof. Misic's 4/8 lecture — what he said but the slides don't capture.
+
+### Exam-Focused Verbal Cues
+
+- **"On an exam this would be one point out of ten"** — Identifying max vs min (trivial but easy to bungle under pressure).
+- **"Expected arrivals come from BINOMIAL distribution"** — $D_j$ ~ Binomial$(T, p_j)$. Large $T$ → approximately normal by CLT. But the underlying is binomial. Students treat forecasts as deterministic — wrong.
+- **"Dual variables as sensitivity — this is going to be important today."** Foundation for bid-price.
+- **Policy specification is intractable:** For $T$ periods × $(B+1)$ capacity levels × $(n+1)$ decisions, there are $2^{T(B+1)(n+1)}$ possible policies. The LP approximation matters because direct DP is infeasible.
+
+### Concepts Emphasized by Repetition
+
+**OPPORTUNITY COST** (repeated 8+ times across the lecture):
+- "What is the value of this one seat at this point in time?"
+- "If you use a seat now, you lose the opportunity to sell it later."
+- "It's the MARGINAL value of one more seat."
+
+This is the GLUE that holds the entire bid-price framework together.
+
+**Myopic policy as benchmark:** Always sells out but leaves money on the table ($27,788 vs $29,329). Don't confuse "selling all capacity" with "maximizing revenue."
+
+**Bid price varies with BOTH time AND capacity** — multiple worked examples:
+- `bpc(160, 0)` → $\pi = 100$ (early, full plane → low opportunity cost)
+- `bpc(160, 100)` → $\pi = 0$ (late, full plane → almost no time for high fares)
+- `bpc(20, 99)` → $\pi = 210$ (late, almost empty → high scarcity premium)
+
+Many students treat $\pi$ as a fixed number — wrong.
+
+### Real-World Stories (Set Context)
+
+**The People Express bankruptcy:** $1 billion revenue but only $60 million profit (way less than $350M expected). Why? Undercutting on price WITHOUT capacity control — filling planes with $80 fares when $500 fares were available. This is why RM matters.
+
+**The travel office anecdote:** A student's flight from Shanghai to LA was booked via SHG → HKG → TPE → LAX. COVID-era transit visa rules meant the student couldn't enter Taiwan. This illustrates why we model "10 fare classes" — there are 10+ hidden fare sources (corporate offices, Expedia, airline.com, etc.), each with different rules.
+
+### Verbal Clarifications
+
+**Why fractional allocations are OK** (conceptually): "It's not implementable but useful." If $x_1 = 3.5$, it means "on average, accept 3.5 class-1 requests per flight" across many repetitions. Resolves the confusion about fractional seats.
+
+**Python indexing GOTCHA:** Slides use $T - t + 1$ (math convention, periods left including current). Notebook code uses `T - t` (zero-indexing). Don't copy mechanically.
+
+**Bernoulli vs Binomial vs Poisson clarity:**
+- Per period: class $j$ arrives with probability $p_j$, independent across periods → Bernoulli per period.
+- Over $T$ periods: # arrivals of class $j$ ~ Binomial$(T, p_j)$, mean $Tp_j$.
+- Continuous-time analog: Poisson process with rate $\lambda_j$, mean $\lambda_j T$.
+
+### Student Q&A
+
+- **"Why not accept business class all the time?"** Because you don't KNOW if business travelers will arrive. If you hold capacity and only economy arrives, you waste the flight. Solve on AVERAGE.
+- **"How do airlines actually optimize?"** Simulation: 20,000 LP solves (100 sims × 200 days). Real airlines: once at sale opening, then nightly updates. Notebook uses `m.params.OutputFlag = 0` to suppress logs.
+- **"Is bid price time-dependent?"** "Very much so. Very much capacity-dependent too." BOTH dimensions matter.
+- **"How do we know we're close to optimal?"** LP value is an upper bound. Hitting 29,329 vs 29,440 LP is 0.37% gap. Asymptotically optimal — gap shrinks with problem size.
+- **"What about overbooking?"** Modify seat constraint: $0.8 x_i \le$ seats (for 80% show-up). But might break linearity.
+
+### Key Profit Insight
+
+Revenue improves 5.5% (29,329 vs 27,788). But with $26,000 fixed cost: profit improves **86%** ($3,329 vs $1,788). 
+
+> *"Small percentage improvements in revenue lead to LARGE percentage improvements in profit"* because airline fixed costs are huge. This is why RM matters in practice.
+
+### Warnings Flagged Verbally
+
+1. **Don't confuse forecast with allocation.** Forecast = $Tp$. Allocation = $x_j$ you choose to accept.
+2. **LP is an upper bound, NOT a guarantee.** If a company claims they achieve LP value, that's NOT believable.
+3. **Bid price is NOT constant** — varies with $t$ and $b$.
+4. **For multi-leg, SUM bid prices over legs used.** Common mistake: comparing fare to a single leg's bid price.
+5. **Shadow price CAN be zero.** If demand forecast < capacity, $\pi = 0$.
+6. **At horizon end, you become DESPERATE.** As $t \to T$ with $b > 0$, $\pi \to 0$.
+
+### Strategy
+
+1. Build static LP (capacity + demand cap).
+2. Solve, extract dual variables (bid prices).
+3. Dynamic: at each request, compare fare to sum of relevant bid prices.
+4. Accept iff fare ≥ bid price.
+5. RE-SOLVE the LP at each request with updated remaining capacity and time.
+
+**Key insight:** You're NOT solving for the optimal policy directly. You solve the LP and USE its dual values to guide a greedy accept/reject rule. That rule turns out to be asymptotically optimal.
+</script>
+<script id="md-zh" type="text/markdown"># 第2周 — 收益管理
+
+## 0. 大局观：航空业的故事
+
+收益管理（Revenue management）源于航空业的危机。1978年，《航空公司解除管制法案》允许航空公司自由定价。PEOPLExpress等低成本运营商削价幅度达50-70%，吸引了休闲旅客。美国航空公司副总裁Robert Crandall意识到：*一旦飞机起飞，填满座位的成本几乎为零。* 美国航空可以为休闲旅客提供"终极超级特价"大幅折扣票价，同时向商务旅客收取高价。
+
+**危机：** 1978-2002年间，超过100家航空公司破产。**解决方案：** 容量控制（Capacity control）——根据起飞日期动态决定每班航班出售的折扣座位数量。美国航空将收益管理的收益归功于140亿美元的增量收入（1988-1991）。这是现代收益管理的诞生。
+
+## 1. 背景 — 为什么座位分配很难
+
+航班：160个座位，200天内销售。
+- 客户A（第10天）：想要$80经济舱座位
+- 客户B（第195天）：愿意支付$500商务舱
+
+**权衡（核心权衡）：**
+- 现在接受A：获得$80，失去向B出售的机会
+- 等待B：保留容量，但B可能永远不会到达
+
+**机会成本（Opportunity cost）：** 座位的价值 = 如果现在使用它而错过的预期收入。
+
+## 2. 单航段收益管理演示
+
+### 设置
+- 容量 $C = 160$ 个座位
+- $K = 10$ 个票价等级（Fare classes），收益为 $r_j$（$100到$500）
+- 时间范围 $T = 200$ 个周期
+- 每个周期最多一个到达，舱位等级 $j$ 的概率为 $p_j$
+- 预期需求：$E[D_j] = T \cdot p_j$
+
+### 短视策略（全部接受）
+```
+If b > 0: ACCEPT
+Else: REJECT
+```
+为什么失败：用$80的票价填满160个座位，为$500的票价留不下空间。平均收入≈$27,788。
+
+### 确定性线性规划（LP）
+**决策：** $x_j$ = 接受的第j舱位等级的数量。
+
+**公式：**
+$$\max \sum_{j=1}^{K} r_j x_j$$
+$$\text{s.t. } \sum_{j=1}^{K} x_j \le C \quad \text{（容量约束）}$$
+$$x_j \le E[D_j] = T p_j \quad \text{（需求上限）}$$
+$$x_j \ge 0$$
+
+**数值例子：** $K=10$，收益 $[100,115,120,140,150,210,220,400,450,500]$，概率 $[0.16,0.16,0.14,0.1,0.1,0.08,0.06,0.05,0.04,0.02]$，$T=200$，$C=160$。
+
+预测 = $T \cdot p$ = $[32,32,28,20,20,16,12,10,8,4]$。总和 = 182 > 160容量。
+
+**最优分配：** $[10, 32, 28, 20, 20, 16, 12, 10, 8, 4]$。LP值 = $29,440。第1舱位等级（$100）被限制为10；更高舱位等级获得完整预测。
+
+## 3. 投标价格控制
+
+**投标价格** $\pi_\ell$ = 容量约束的影子价格 = 额外座位的边际价值。
+
+### 决策规则
+在时间 $t$ 拥有 $b$ 个座位：
+1. 求解LP$(t, b)$，包含剩余需求 $(T-t+1) p_j$
+2. 获得容量约束的影子价格 $\pi_t(b)$
+3. **如果 $r_j \ge \pi_t(b)$ 且座位可用，接受请求 $j$**
+
+### 直观理解
+- $\pi$ = 现在使用座位的机会成本（vs. 保留以供日后高价出售）
+- 仅当票价超过机会成本时接受
+- 随着 $t$ 接近起飞，$\pi$ 增加（高价机票到达的时间减少）
+- 随着 $b$ 减少，$\pi$ 增加（稀缺性）
+
+### 数值例子
+在 $t = 100$，$b = 50$ 个座位，$\pi = 200$：
+- 舱位A（$150）：$150 < 200$ → 拒绝
+- 舱位B（$200）：$200 \ge 200$ → 接受
+- 舱位C（$180）：$180 < 200$ → 拒绝
+
+## 4. 单航段笔记本 — 单元演示
+
+**单元1：数据设置**
+```python
+revenue = [100,115,120,140,150,210,220,400,450,500]
+probability = [0.16,0.16,0.14,0.1,0.1,0.08,0.06,0.05,0.04,0.02]
+B = 160; T = 200
+forecast = T * probability  # = [32,32,28,...,4]
+```
+
+**单元3：求解静态LP**
+```python
+m = Model()
+x = m.addVars(nFares, lb=0, ub=forecast)
+seat_constr = m.addConstr(quicksum(x[i] for i in range(nFares)) <= B)
+m.setObjective(quicksum(revenue[i]*x[i] for i in range(nFares)), GRB.MAXIMIZE)
+m.optimize()
+# LP_obj = 29440
+```
+
+**单元6：bpc()函数**
+```python
+def bpc(b, t):
+    seat_constr.rhs = b
+    for i in range(nFares):
+        x[i].ub = (T-t)*probability[i]
+    m.optimize()
+    return seat_constr.pi
+```
+- `bpc(160, 0)` → π = 100
+- `bpc(20, 99)` → π = 210（稀缺性）
+
+**单元13：模拟投标价格策略**
+```python
+for s in range(100):
+    revenue_s, b = 0, 160
+    for t in range(T):
+        fare = arrival_sequence[t]
+        if fare < nFares:  # not "no arrival"
+            dual = bpc(b, t)
+            if revenue[fare] >= dual:
+                b -= 1
+                revenue_s += revenue[fare]
+# 平均收入 ≈ 29,329（99.6%的LP界）
+```
+
+**单元19：短视基准** → 平均收入27,788。与投标价格的差距 = 5.5%。固定成本为$26,000，**利润改进 = 86%**。
+
+## 5. 多航段/网络收益管理
+
+### 设置
+多个共享容量的航班航段：
+- $M$ 个航段，容量为 $b_\ell$
+- $n$ 条航段（某些单航段，某些多航段，使用2个或更多航段）
+- 航段 $i$ 使用航段 $\ell$ 当且仅当 $a_{\ell i} = 1$
+
+### 线性规划
+$$\max \sum_i r_i x_i$$
+$$\text{s.t. } \sum_{i: a_{\ell i}=1} x_i \le b_\ell \quad \forall \ell$$
+$$x_i \le E[D_i] = T p_i$$
+$$x_i \ge 0$$
+
+### 多航段的投标价格规则
+航段 $i$ 使用航段集合 $S_i$ 中的航段。接受当且仅当：
+$$r_i \ge \sum_{\ell \in S_i} \pi_\ell$$
+
+**例子：** 航段BOS→SLC→LAX使用航段0和3。如果 $\pi_0 = 50, \pi_3 = 40$，总投标价格 = 90。如果票价≥90则接受。
+
+## 6. 多航段笔记本演示
+
+网络：4个航段（BOS→SLC、JFK→SLC、SLC→SFO、SLC→LAX），8条航段（4条直达+4条转接）。
+
+```python
+itineraries_to_legs = [[0],[1],[2],[3],[0,2],[0,3],[1,2],[1,3]]
+```
+
+求解LP → 最优收益132,400。动态投标价格策略平均值 = 130,298（1.59%差距）。短视策略 = 124,422（4.7%更低）。
+
+## 7. 预期到达 — 数学
+
+### 伯努利分布（离散时间）
+- 每个周期，舱位等级 $j$ 以概率 $p_j$ 到达
+- 在 $[t, T]$ 上的预期到达：$E[D_j(t,T)] = (T-t+1) p_j$
+
+### 泊松分布（连续时间）
+- 每单位时间速率 $\lambda_j$
+- 在 $[t, T]$ 上的预期到达：$E[N_{t,T,j}] = \lambda_j (T-t)$
+
+## 8. 算法伪代码
+
+```
+b ← C
+revenue ← 0
+FOR t = 1 to T:
+    Solve LP(t, b):
+        max Σ r_i x_i
+        s.t. Σ a_{ℓi} x_i ≤ b_ℓ  ∀ℓ
+             x_i ≤ (T-t) p_i  ∀i
+    π ← shadow prices of capacity constraints
+    Observe request type i
+    IF i is real AND r_i ≥ Σ_{ℓ in legs(i)} π_ℓ AND b[ℓ] > 0 for all ℓ:
+        ACCEPT: revenue += r_i; b[ℓ] -= 1 for each ℓ in legs(i)
+RETURN revenue
+```
+
+## 9. 常见错误 ⚠️
+
+1. **混淆需求和分配。** 预测 = 最大需求；分配 = 您选择接受的最优数量。
+2. **忽视机会成本。** 不要仅因为座位空着就接受——与投标价格比较。
+3. **静态vs动态混淆。** LP给出静态分配；投标价格在每个请求处动态重新求解。
+4. **错误的航段计算。** 多航段请求使用它们使用的航段上的投标价格总和。
+5. **将投标价格视为固定。** $\pi_t(b)$ 随时间和容量变化。
+6. **忘记需求上限。** 没有 $x_j \le E[D_j]$，LP将所有容量分配给最高票价。
+7. **声称不可能的收入。** LP值是可实现的预期收入的上界。
+
+## 10. 考试相关性
+
+练习考试幻灯片明确列出5种收益管理问题类型：
+1. "为这种情况制定容量控制LP。"
+2. "设计一种使用LP的动态接受/拒绝算法。"
+3. "在时间t有X个座位，影子价格 = Y。哪些请求类型接受？"
+4. "给定到达概率，类型5在整个范围内的预期到达？"
+5. "某人声称策略达到$X。LP值为$Y。可信吗？"
+
+## 11. 迷你练习
+
+**问1。** 酒店：100间房，10晚。A舱位($80, p=0.05/晚)、B($120, 0.06)、C($200, 0.02)。编写LP。
+
+**答案：** $\max 80x_A + 120x_B + 200x_C$ s.t. $x_A + x_B + x_C \le 100$，$x_A \le 0.5, x_B \le 0.6, x_C \le 0.2$，$x \ge 0$。
+
+**问2。** $\pi = 180$。接受票价 $r_j = 200$？**是**（200 ≥ 180）。
+
+**问3。** 多航段票价$85，使用2个航段，其中 $\pi_1 = 50, \pi_2 = 40$。**拒绝**（$85 < 90$）。
+
+**问4。** LP最优值 = $30k。策略声称$35k收入。**不可能**——LP是上界。
+
+**问5。** $T = 200, p_J = 0.05$。从 $t = 150$ 开始预期J到达？$(200-150+1)(0.05) = 51 \times 0.05 = 2.55$。
+
+## 12. 速查表
+
+| 概念 | 公式 |
+|---|---|
+| 容量LP | $\max \sum r_j x_j$ s.t. $\sum x_j \le C$, $x_j \le E[D_j]$ |
+| 投标价格 = | 容量约束的影子价格 |
+| 单航段规则 | 接受当且仅当 $r_j \ge \pi_t(b)$ |
+| 多航段规则 | 接受航段 $i$ 当且仅当 $r_i \ge \sum_{\ell \in S_i} \pi_\ell$ |
+| 伯努利到达 | $E[D_j] = (T-t+1) p_j$ |
+| 泊松到达 | $E[N] = \lambda_j (T-t)$ |
+| LP值 = | 预期收入的上界 |
+
+**关键直观理解：** 投标价格 = 机会成本。仅当票价≥机会成本时接受。在每个请求处重新求解。
+
+---
+
+## 讲座笔记见解 — 超越幻灯片
+
+来自Misic教授4月8日讲座——他说过但幻灯片没有提到的内容。
+
+### 以考试为中心的口头线索
+
+- **"在考试上这将是十分之一的一分"** ——识别最大值vs最小值（琐碎但在压力下容易出错）。
+- **"预期到达来自二项分布"** ——$D_j$ ~ 二项分布$(T, p_j)$。大型 $T$ → 根据中心极限定理近似正态。但基础是二项分布。学生将预测视为确定性——错误。
+- **"对偶变量作为敏感性——这将在今天很重要。"** 投标价格的基础。
+- **策略规范是棘手的：** 对于 $T$ 个周期 × $(B+1)$ 个容量水平 × $(n+1)$ 个决策，有 $2^{T(B+1)(n+1)}$ 种可能的策略。LP近似很重要，因为直接DP不可行。
+
+### 通过重复强调的概念
+
+**机会成本**（讲座中重复8次以上）：
+- "这个座位在这个时间点的价值是多少？"
+- "如果你现在使用一个座位，你就失去了以后出售它的机会。"
+- "这是额外座位的边际价值。"
+
+这是粘合在整个投标价格框架中的关键。
+
+**短视策略作为基准：** 总是售罄但留下了钱（$27,788 vs $29,329）。不要混淆"售罄容量"和"最大化收入"。
+
+**投标价格随时间和容量变化** ——多个有效例子：
+- `bpc(160, 0)` → $\pi = 100$（早期，满飞机 → 机会成本低）
+- `bpc(160, 100)` → $\pi = 0$（晚期，满飞机 → 几乎没有高价票到达的时间）
+- `bpc(20, 99)` → $\pi = 210$（晚期，几乎空 → 高稀缺溢价）
+
+许多学生将 $\pi$ 视为固定数字——错误。
+
+### 现实故事（设置背景）
+
+**PEOPLExpress破产：** $10亿收入但仅$6000万利润（远低于$3.5亿预期）。为什么？削价而不进行容量控制——用$80票价填满飞机，而$500票价可用。这就是为什么RM很重要。
+
+**旅行办公室轶事：** 一个学生的上海飞洛杉矶航班通过SHG → HKG → TPE → LAX预订。COVID时代过境签证规则意味着学生无法进入台湾。这说明了为什么我们建立"10个票价等级"的模型——有10多个隐藏的票价来源（公司办公室、Expedia、airline.com等），每个都有不同的规则。
+
+### 口头澄清
+
+**为什么分数分配可行**（概念上）："这不可实施但有用。"如果 $x_1 = 3.5$，意味着"在多次重复中，平均接受每班航班3.5个第1舱位请求"。解决了关于分数座位的困惑。
+
+**Python索引陷阱：** 幻灯片使用 $T - t + 1$（数学约定，剩余周期包括当前周期）。笔记本代码使用 `T - t`（零索引）。不要机械复制。
+
+**伯努利vs二项分布vs泊松分布澄清：**
+- 每个周期：舱位等级 $j$ 以概率 $p_j$ 到达，在各周期间独立 → 每个周期的伯努利分布。
+- 在 $T$ 个周期内：舱位等级 $j$ 的到达数 ~ 二项分布$(T, p_j)$，平均值 $Tp_j$。
+- 连续时间类似：泊松过程，速率 $\lambda_j$，平均值 $\lambda_j T$。
+
+### 学生问答
+
+- **"为什么不总是接受商务舱？"** 因为你不知道商务旅客是否会到达。如果你保留容量而只有经济舱到达，你就浪费了航班。在平均基础上求解。
+- **"航空公司实际上如何优化？"** 模拟：20,000次LP求解（100次模拟×200天）。真实航空公司：在销售开始时一次，然后每晚更新。笔记本使用 `m.params.OutputFlag = 0` 来抑制日志。
+- **"投标价格与时间有关吗？"** "非常有关。也与容量非常相关。"两个维度都很重要。
+- **"我们怎么知道我们接近最优？"** LP值是上界。达到29,329 vs 29,440 LP是0.37%差距。渐近最优——差距随问题规模缩小。
+- **"超额预订呢？"** 修改座位约束：$0.8 x_i \le$ 座位（80%出现率）。但可能破坏线性性。
+
+### 关键利润见解
+
+收益改进5.5%（29,329 vs 27,788）。但固定成本为$26,000：利润改进**86%**（$3,329 vs $1,788）。
+
+> *"收入的小幅百分比提升导致利润的大幅百分比提升"*因为航空公司固定成本巨大。这就是为什么RM在实践中很重要。
+
+### 口头标记的警告
+
+1. **不要混淆预测和分配。** 预测 = $Tp$。分配 = 你选择接受的 $x_j$。
+2. **LP是上界，不是保证。** 如果公司声称他们达到了LP值，这是不可信的。
+3. **投标价格不是常数** ——随 $t$ 和 $b$ 变化。
+4. **对于多航段，在使用的航段上求和投标价格。** 常见错误：将票价与单个航段的投标价格比较。
+5. **影子价格可以为零。** 如果需求预测 < 容量，$\pi = 0$。
+6. **在范围结束时，你会变得绝望。** 当 $t \to T$ 且 $b > 0$ 时，$\pi \to 0$。
+
+### 策略
+
+1. 构建静态LP（容量+需求上限）。
+2. 求解，提取对偶变量（投标价格）。
+3. 动态：在每个请求处，将票价与相关投标价格的总和比较。
+4. 当票价≥投标价格时接受。
+5. 在每个请求处用更新的剩余容量和时间重新求解LP。
+
+**关键见解：** 你不是直接求解最优策略。你求解LP并使用其对偶值来指导一个贪心接受/拒绝规则。该规则被证明是渐近最优的。
+</script>
+
+<script>
+function renderContent(lang) {
+  const id = (lang === 'zh') ? 'md-zh' : 'md-en';
+  const src = document.getElementById(id).textContent;
+  document.getElementById('content').innerHTML = marked.parse(src);
+  // Swap banner labels too
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
+    // Only update simple text spans (not children)
+    if (el.children.length === 0) el.textContent = txt;
+  });
+  // Re-typeset MathJax
+  setTimeout(() => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([document.getElementById('content')]);
+    }
+  }, 50);
+}
+
+// Initial render based on saved preference
+const initLang = localStorage.getItem('site_lang') || 'en';
+renderContent(initLang);
+
+// Listen for language change events from script.js
+window.addEventListener('langchange', e => renderContent(e.detail));
+</script>
+<script src="script.js"></script>
+</body>
+</html>

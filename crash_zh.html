@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>考前突击 | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">运营分析 — 期末复习</p>
+<nav>
+<a href="index.html">🏠 主页</a>
+<a href="strategy_zh.html">🎯 考试策略</a>
+<a href="week1.html">第1周 — 线性规划对偶</a>
+<a href="week2.html">第2周 — 收益管理</a>
+<a href="week3.html">第3周 — 报童问题</a>
+<a href="week4.html">第4周 — 选址问题</a>
+<a href="week5.html">第5周 — 商品组合</a>
+<a href="week6.html">第6周 — 定价问题</a>
+<a href="week7.html">第7周 — 网络流</a>
+<a href="week8.html">第8周 — 旅行商问题</a>
+<a href="formulas_zh.html">📐 公式表</a>
+<a href="templates_zh.html">🧩 题型模板</a>
+<a href="crash_zh.html" class="active">🚨 考前突击</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>🚨 考前突击 — 临阵磨枪</h1>
+
+<div class="callout warn">今晚不要再学新东西。重新浏览本页、公式表以及练习题。早点睡。相信你之前的准备。</div>
+
+<div class="callout exam">
+<strong>🎙️ 确认的考试事实(来自教授 5/27 课堂):</strong>
+<ul style="margin-top:6px">
+<li><strong>考试范围:</strong>第1–8周。<strong>不</strong>包含第9周(列生成)和第10周(匹配)。</li>
+<li><strong>形式:</strong>约6道题,每题多个小问。<strong>不会</strong>覆盖全部8个主题 — 部分主题可能不出现。</li>
+<li><strong>计算器:</strong><strong>必须</strong>使用非图形科学计算器。<strong>不允许</strong>图形计算器。</li>
+<li><strong>TSP 的 getSubtours 代码阅读题保证会考。</strong>教授原话:<em>"I will give you the code; you should be able to predict the output."</em>(我会给你代码;你应该能够预测输出。)</li>
+<li><strong>课堂强调最多的内容:</strong>报童问题的关键分位数(critical fractile)、网络流(LP 建模)、商品组合(无购买选项 + 同类相食效应)、TSP(getSubtours + 惰性子环路消除约束)、LP 对偶(影子价格)。定价与收益管理为次要,但仍可能出现。</li>
+</ul>
+</div>
+
+<h2>8 个主题 — 识别线索</h2>
+<table>
+<tr><th>主题</th><th>识别关键词</th><th>主要工具</th></tr>
+<tr><td>LP 对偶(W1)</td><td>"原问题/对偶问题"、"影子价格"、"是否应该多买"</td><td>原对偶转换表;弱对偶定理;$\Delta R = p^* \Delta b$</td></tr>
+<tr><td>收益管理(W2)</td><td>"票价等级"、"随时间变化的容量"</td><td>容量 LP + 投标价格决策规则</td></tr>
+<tr><td>报童问题(W3)</td><td>"单期"、"易腐"、"需求不确定"</td><td>$\alpha = c_u/(c_u+c_o)$,求 CDF 反函数</td></tr>
+<tr><td>选址问题(W4)</td><td>"开设 $p$ 个设施"、"距离"</td><td>MCLP / p-中位 / p-中心</td></tr>
+<tr><td>商品组合(W5)</td><td>"顾客分群 + 效用 + 无购买选项"</td><td>最大效用,$R(S) = \sum r_i P(i|S)$</td></tr>
+<tr><td>定价问题(W6)</td><td>"价格点"、"线性需求"</td><td>$d_i = \alpha - \beta p + \gamma$;含 $x_{i,t}$ 的整数规划</td></tr>
+<tr><td>网络流(W7)</td><td>"从 A 运到 B"、"供应链"</td><td>流量守恒;通过对数转换求最大可靠性</td></tr>
+<tr><td>TSP(W8)</td><td>"每个地点访问一次并返回"</td><td>度数=1 + SEC + 惰性回调</td></tr>
+</table>
+
+<h2>必背公式(今晚反复练习)</h2>
+<ol>
+<li>$F(Q^*) = c_u / (c_u + c_o) = (p-c)/p$</li>
+<li>投标价格决策:$r_j \ge \pi$? 接受 : 拒绝</li>
+<li>流量守恒:$\sum_j x_{ji} + b_i = \sum_j x_{ij}$,每个节点都成立</li>
+<li>三角分布 CDF:当 $x \le b$ 时 $F(x) = (x-a)^2 / [(b-a)(c-a)]$;当 $x > b$ 时 $1 - (c-x)^2/[(c-b)(c-a)]$</li>
+<li>经验分位数:排序后第 ⌈$n\alpha$⌉ 个值</li>
+<li>TSP 子环路消除约束(SEC):$\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$</li>
+<li>选择概率:对所有以商品 $i$ 为首选的分群 $\lambda_k$ 求和</li>
+<li>定制化上界:$\sum_k \lambda_k \max_{i: u_{k,i} > u_{k,0}} r_i$</li>
+<li>定价需求函数:$d_i = \alpha_i - \beta_i p_i + \sum_{j \ne i} \gamma_{ij} p_j$</li>
+</ol>
+
+<h2>必备决策流程</h2>
+<table>
+<tr><th>问题</th><th>流程</th></tr>
+<tr><td>"原问题是否最优?"</td><td>(a) 原问题可行?(b) 对偶问题可行?(c) 两者目标函数值相等?若三者皆是 → 最优。若对偶不可行 → <strong>无法得出结论</strong>。</td></tr>
+<tr><td>"是否应该多买 X?"</td><td>比较单位成本与影子价格。当且仅当成本 < 影子价格时购买。</td></tr>
+<tr><td>"若资源变化 $\Delta$,收益变化多少?"</td><td>$\Delta R \approx p^* \cdot \Delta b$。</td></tr>
+<tr><td>"商品组合收益的上界?"</td><td>(a) 定制化上界:$\sum \lambda_k \max r_i$,对相关商品取最大。或 (b) LP 松弛。</td></tr>
+<tr><td>"TSP 为什么需要 SEC?"</td><td>仅凭度数约束会允许出现不连通的子环路(小循环)。</td></tr>
+<tr><td>"提供全部商品是否最优?"</td><td>通常<strong>不是</strong>。存在同类相食(cannibalization)。需要整数规划。</td></tr>
+<tr><td>"是否接受这个收益管理请求?"</td><td>计算(或使用给定的)投标价格 $\pi$。当且仅当票价 ≥ $\pi$ 且容量充足时接受。</td></tr>
+<tr><td>"如何计算报童问题的 $Q^*$?"</td><td>(1) 计算 $\alpha$,(2) 识别分布,(3) 求 $F$ 的反函数。</td></tr>
+</table>
+
+<h2>快速合理性检查</h2>
+<ul>
+<li>报童问题中 $\alpha < 0.5$ → $Q^* < $ 中位数(少订)。$\alpha > 0.5$ → $Q^* > $ 中位数。</li>
+<li>影子价格 = 0 → 约束存在松弛(资源未完全使用)。</li>
+<li>影子价格 > 0 → 约束紧绷(资源完全使用)。</li>
+<li>最大可靠性:$r < 1$ 的对数为<strong>负数</strong>。最大值 = 最接近零的负数之和。</li>
+<li>TSP SEC 必须同时包含 $x_{ij}$ <strong>和</strong> $x_{ji}$。</li>
+<li>定价:$\beta > 0$ 恒成立;自身价格项贡献 $-\beta p^2$(为减号)。</li>
+<li>选择概率:argmax 中<strong>必须始终</strong>包含无购买选项。</li>
+<li>网络:$b_i$ 之和必须为 0(平衡)。</li>
+</ul>
+
+<h2>通用附加约束模式(背熟)</h2>
+<table>
+<tr><th>中文/英文表述</th><th>约束</th></tr>
+<tr><td>若 $A$ 则 $B$</td><td>$x_A \le x_B$</td></tr>
+<tr><td>若 $A$ 则 $\{B,C,D\}$ 中至少有一个</td><td>$x_A \le x_B + x_C + x_D$</td></tr>
+<tr><td>若 $A$ 且 $B$ 则 $C$</td><td>$x_A + x_B - 1 \le x_C$</td></tr>
+<tr><td>若 $A$ 则非 $B$</td><td>$x_A + x_B \le 1$</td></tr>
+<tr><td>每个设施最多 $K$ 个</td><td>$\sum_i z_{ij} \le K \cdot x_j$</td></tr>
+<tr><td>开设数量在 $m$ 与 $M$ 之间</td><td>$m \le \sum x_j \le M$</td></tr>
+</table>
+
+<h2>常用 $z_\alpha$ 数值</h2>
+<table>
+<tr><th>$\alpha$</th><td>0.10</td><td>0.25</td><td>0.40</td><td>0.50</td><td>0.60</td><td>0.75</td><td>0.80</td><td>0.90</td><td>0.95</td></tr>
+<tr><th>$z_\alpha$</th><td>−1.28</td><td>−0.67</td><td>−0.25</td><td>0</td><td>0.25</td><td>0.67</td><td>0.84</td><td>1.28</td><td>1.65</td></tr>
+</table>
+
+<h2>三角分布快速参考</h2>
+<p><strong>Tr$[a, b, c]$:</strong> a=最小值,b=众数,c=最大值。</p>
+<p><strong>反 CDF:</strong></p>
+<ul>
+<li>$F(b) = (b-a)/(c-a)$ — 用以判断在哪一段。</li>
+<li>若 $\alpha \le F(b)$:$Q^* = a + \sqrt{\alpha(b-a)(c-a)}$</li>
+<li>若 $\alpha > F(b)$:$Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$</li>
+</ul>
+<p><strong>均值:</strong> $(a+b+c)/3$。</p>
+
+<h2>考试当天早晨</h2>
+<ul>
+<li>带上科学计算器(非图形)。</li>
+<li>多带几支铅笔/钢笔。</li>
+<li>先通读整张试卷;找出简单题。</li>
+<li>先做简单题;先把分数拿到手。</li>
+<li>建模题:<strong>始终</strong>先定义变量再写模型。</li>
+<li>"不允许 Σ 记号"时:逐一明确列出每个变量。</li>
+<li>对偶约束中的不等号方向仔细核对。</li>
+<li>若大脑空白:在草稿纸边缘凭记忆默写公式表,以唤起记忆。</li>
+<li>最后留出 15 分钟检查。</li>
+</ul>
+
+<div class="callout key">
+🍀 <strong>你可以的。</strong>大部分分数来自:
+<br>(1) 清晰的变量定义,
+<br>(2) 正确的公式应用,
+<br>(3) 展示过程以争取部分分数。
+<br><br>
+不要耍花样。遵循模板。相信你的准备。
+</div>
+
+<h2>🎙️ Misic 教授最后一节课(5/27)的直接引用</h2>
+<div class="callout info">
+<em>"Basically everything through the end of the week, which we just finished, all of that is fair game for the final exam. So any of those topics from LP duality to traveling salesman problem, which we just finished, all of that can show up in the exam."</em>
+<br><em>(基本上到本周结束、我们刚刚学完的所有内容,都可能在期末考试中考查。所以从 LP 对偶到我们刚学完的旅行商问题,这些主题都可能出现在考试中。)</em>
+<br><br>
+<em>"What we're going to start now is column generation, which I will not test you on the exam."</em>
+<br><em>(我们现在要开始讲的是列生成,这部分我不会在考试中考你们。)</em>
+<br><br>
+<em>"If you go through the practice problems on your own, you should be fine in the exam."</em>
+<br><em>(如果你自己做完了练习题,考试就应该没问题。)</em>
+<br><br>
+<em>"If you did the homework on your own [without copying to ChatGPT at 11pm], you will be fine with the exam."</em>
+<br><em>(如果你的作业是自己做的[没有在晚上 11 点把题目复制给 ChatGPT],考试就没问题。)</em>
+<br><br>
+<em>"If I ask you what's the output [of getSubtours]... you should be able to do that."</em>
+<br><em>(如果我问你 [getSubtours 的] 输出是什么……你应该能够回答出来。)</em>
+</div>
+
+<h2>走进考场前最后再核查的 10 件事</h2>
+<ol>
+<li>我能用转换表写出任何原 LP 的对偶问题。</li>
+<li>我能为报童问题反解三角 CDF(两段都会)。</li>
+<li>我知道经验分位数 = 排序后第 ⌈$n\alpha$⌉ 个值。</li>
+<li>我能为商品组合计算首选概率(包括无购买选项!)。</li>
+<li>我能为多航段请求写出投标价格决策规则。</li>
+<li>我能在每个节点<strong>显式</strong>写出流量守恒(不用 Σ)。</li>
+<li>我能通过 $-\log$ 将最大可靠性问题转化为最短路径问题。</li>
+<li>我能针对给定序列逐行追踪 getSubtours 的执行过程。</li>
+<li>我能针对给定的子环路列表写出惰性回调添加的 SEC。</li>
+<li>我能识别一个不完整的定价整数规划是否同时缺失了 $y$ 的<strong>两个</strong>方向的关联约束。</li>
+</ol>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

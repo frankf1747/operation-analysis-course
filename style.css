@@ -1,0 +1,565 @@
+/* MGMTMSA 408 Final Exam Review - Stylesheet v2 */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #1f2937;
+  background: #f9fafb;
+}
+
+html { scroll-behavior: smooth; }
+
+/* ====== SIDEBAR ====== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: #1f2937;
+  color: #e5e7eb;
+  overflow-y: auto;
+  padding: 22px 16px;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+}
+
+.sidebar h1 {
+  font-size: 1.2rem;
+  color: #f9fafb;
+  margin: 0 0 4px 0;
+}
+
+.sidebar .subtitle {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0 0 18px 0;
+}
+
+.sidebar nav a {
+  display: block;
+  color: #d1d5db;
+  text-decoration: none;
+  padding: 7px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  transition: background 0.15s;
+}
+
+.sidebar nav a:hover {
+  background: #374151;
+  color: #fff;
+}
+
+.sidebar nav a.active {
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ====== MAIN AREA ====== */
+main {
+  margin-left: 260px;
+  padding: 30px 50px;
+  max-width: 950px;
+}
+
+/* ====== WEEK BANNER ====== */
+.week-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: white;
+  padding: 24px 30px;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+}
+
+.week-banner .week-num {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.week-banner h1 {
+  margin: 8px 0 4px;
+  color: white;
+  font-size: 1.8rem;
+  border: none;
+}
+
+.week-banner .cn {
+  font-size: 1.2rem;
+  color: rgba(255,255,255,0.85);
+  font-weight: normal;
+  margin-left: 8px;
+}
+
+.week-banner .topics {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.85);
+  max-width: 600px;
+}
+
+.week-banner .open-pdf {
+  background: rgba(255,255,255,0.15);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  max-width: 280px;
+}
+
+.week-banner .open-pdf code {
+  display: inline-block;
+  background: rgba(0,0,0,0.3);
+  color: #fef3c7;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+/* ====== MARKDOWN CONTENT ====== */
+.markdown-body {
+  background: white;
+  padding: 36px 44px;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.markdown-body h1 {
+  font-size: 1.9rem;
+  color: #1e3a8a;
+  border-bottom: 3px solid #e5e7eb;
+  padding-bottom: 12px;
+  margin-top: 0;
+}
+
+.markdown-body h2 {
+  font-size: 1.4rem;
+  color: #1e40af;
+  margin-top: 36px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+.markdown-body h3 {
+  font-size: 1.15rem;
+  color: #374151;
+  margin-top: 24px;
+}
+
+.markdown-body p,
+.markdown-body li {
+  font-size: 1rem;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 28px;
+}
+
+.markdown-body li {
+  margin: 4px 0;
+}
+
+.markdown-body strong {
+  color: #1e40af;
+}
+
+/* ====== TABLES ====== */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0;
+  font-size: 0.94rem;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 9px 14px;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.markdown-body table th {
+  background: #f3f4f6;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.markdown-body table tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+/* ====== CODE ====== */
+.markdown-body code {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #be185d;
+}
+
+.markdown-body pre {
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 16px 20px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ====== BLOCKQUOTES ====== */
+.markdown-body blockquote {
+  border-left: 4px solid #2563eb;
+  background: #eff6ff;
+  margin: 16px 0;
+  padding: 12px 20px;
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-body blockquote p {
+  margin: 4px 0;
+}
+
+/* ====== MATHJAX ====== */
+mjx-container[display="true"] {
+  margin: 14px 0 !important;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* ====== CALLOUT BOXES (used in dashboard/strategy) ====== */
+.callout {
+  border-left: 4px solid;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 16px 0;
+  background: #f3f4f6;
+}
+
+.callout.info { border-color: #2563eb; background: #eff6ff; }
+.callout.warn { border-color: #f59e0b; background: #fffbeb; }
+.callout.key  { border-color: #10b981; background: #ecfdf5; }
+.callout.exam { border-color: #ef4444; background: #fef2f2; font-weight: 500; }
+
+.warn { color: #b45309; font-weight: 600; }
+.hl   { background: #fde68a; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+
+/* ====== SECTION (for non-week pages) ====== */
+section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px 38px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+section h1 {
+  font-size: 1.85rem;
+  color: #1e3a8a;
+  margin-top: 0;
+  border-bottom: 3px solid #e5e7eb;
+  padding-bottom: 12px;
+}
+
+section h2 {
+  font-size: 1.35rem;
+  color: #1e40af;
+  margin-top: 28px;
+}
+
+section h3 {
+  font-size: 1.1rem;
+  color: #374151;
+  margin-top: 22px;
+}
+
+section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 0.94rem;
+}
+
+section table th, section table td {
+  padding: 9px 13px;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+}
+
+section table th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+table.priority tr.high { background: #fef2f2; }
+table.priority tr.med  { background: #fffbeb; }
+table.priority tr.low  { background: #f3f4f6; }
+
+/* ====== CHECKLIST ====== */
+.checklist {
+  list-style: none;
+  padding-left: 0;
+}
+
+.checklist li {
+  padding: 6px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.checklist input[type="checkbox"] {
+  margin-right: 12px;
+  transform: scale(1.2);
+  vertical-align: middle;
+}
+
+.checklist label {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ====== DETAILS / COLLAPSIBLE ====== */
+details {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1e40af;
+  outline: none;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #f3f4f6; }
+::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 1100px) {
+  .sidebar { width: 200px; }
+  main { margin-left: 220px; padding: 24px 30px; }
+  .week-banner { flex-direction: column; }
+  .week-banner .open-pdf { max-width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .sidebar { position: relative; width: 100%; height: auto; }
+  main { margin-left: 0; padding: 16px; max-width: 100%; }
+  .markdown-body { padding: 24px; }
+}
+
+/* ====== Language Toggle Floating Button (light blue, mid-bottom right) ====== */
+.lang-toggle-fab {
+  position: fixed;
+  bottom: 30%;
+  right: 24px;
+  z-index: 1000;
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
+}
+
+.lang-toggle-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.55);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.lang-toggle-fab:active {
+  transform: translateY(0) scale(1);
+}
+
+.lang-toggle-fab .lang-icon { font-size: 1.15rem; }
+.lang-toggle-fab .lang-label { letter-spacing: 0.3px; }
+
+/* ====== Sticky Notes Panel ====== */
+.notes-tab {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 999;
+  background: #facc15;
+  color: #1f2937;
+  border: none;
+  padding: 14px 8px;
+  border-radius: 12px 0 0 12px;
+  cursor: pointer;
+  box-shadow: -2px 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.notes-tab:hover {
+  background: #eab308;
+  transform: translateY(-50%) translateX(-3px);
+}
+
+.notes-tab.hidden { display: none; }
+
+.notes-tab-icon { font-size: 1.5rem; display: block; }
+
+.notes-panel {
+  position: fixed;
+  right: 0;
+  top: 60px;
+  bottom: 60px;
+  width: 340px;
+  background: linear-gradient(180deg, #fef9c3 0%, #fef3c7 100%);
+  border-radius: 12px 0 0 12px;
+  box-shadow: -4px 0 18px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 998;
+  transition: transform 0.3s ease;
+}
+
+.notes-panel.collapsed {
+  transform: translateX(100%);
+  pointer-events: none;
+}
+
+.notes-header {
+  background: #fbbf24;
+  padding: 12px 16px;
+  border-radius: 12px 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #f59e0b;
+}
+
+.notes-title {
+  font-weight: 700;
+  color: #78350f;
+  font-size: 1rem;
+}
+
+.notes-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #78350f;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.notes-close:hover {
+  background: rgba(120, 53, 15, 0.15);
+}
+
+#notes-textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 14px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #1f2937;
+  resize: none;
+  outline: none;
+}
+
+#notes-textarea::placeholder {
+  color: #92400e;
+  opacity: 0.6;
+}
+
+.notes-footer {
+  background: #fde68a;
+  padding: 8px 16px;
+  border-radius: 0 0 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #78350f;
+  border-top: 1px solid #fbbf24;
+}
+
+.notes-saved-indicator { font-weight: 500; }
+.notes-saved-indicator.saving { color: #92400e; font-style: italic; }
+
+.notes-clear {
+  background: rgba(120, 53, 15, 0.1);
+  border: 1px solid rgba(120, 53, 15, 0.2);
+  color: #78350f;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.notes-clear:hover {
+  background: rgba(120, 53, 15, 0.2);
+}
+
+/* Push main content so panel doesn't overlap when on a wide screen */
+@media (min-width: 1500px) {
+  main {
+    max-width: 1000px;
+  }
+}
+
+/* On smaller screens, narrow the notes panel */
+@media (max-width: 900px) {
+  .notes-panel { width: 280px; }
+  .lang-toggle-fab { bottom: 24px; right: 16px; padding: 10px 16px; }
+}
+
+/* (Google Translate widget removed — now using pre-translated content files) */

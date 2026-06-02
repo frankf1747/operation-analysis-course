@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Problem Templates | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Mgmt</a>
+<a href="week3.html">Week 3 — Newsvendor</a>
+<a href="week4.html">Week 4 — Location</a>
+<a href="week5.html">Week 5 — Assortment</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — TSP</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html" class="active">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>🧩 Problem-Solving Templates</h1>
+
+<div class="callout info">For each problem type: how to recognize it, the step-by-step process, the required formulas, an example setup, and common traps. Use these as decision-tree menus during the exam.</div>
+
+<h2>Template 1: "Formulate as LP" (Production / Allocation)</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "decide how much to produce / ship / allocate ... to maximize / minimize ..."
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>Define decision variables — state what each means in words.</li>
+<li>Write objective: $\max / \min \sum c_j x_j$.</li>
+<li>Write resource constraints: $\sum_j a_{ij} x_j \le b_i$ (one per limited input).</li>
+<li>Write demand/balance constraints if applicable.</li>
+<li>Add non-negativity (and binary if relevant).</li>
+</ol>
+<strong>Traps:</strong> Forgetting non-negativity; missing a balance node; writing summations when problem says "no Σ"; mixing up units.
+</div>
+
+<h2>Template 2: Newsvendor</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "perishable / single-period / one-time stock decision" + uncertain demand.
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>List parameters: $p$, $c$, $s$ (or $c_u$, $c_o$).</li>
+<li>Compute fractile $\alpha = c_u / (c_u + c_o)$.</li>
+<li>Identify distribution. Write CDF.</li>
+<li>Solve $F(Q^*) = \alpha$ via inversion.</li>
+<li>If asked for profit: integrate or use sample average.</li>
+</ol>
+<strong>Traps:</strong> Wrong quadratic root for triangular; forgetting salvage; misusing $z_\alpha$ sign.
+</div>
+
+<h2>Template 3: Choice / Assortment</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "customer segments with utilities" + "decide which products to offer."
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>For each segment $k$: find max utility over $S \cup \{0\}$ (include no-purchase!).</li>
+<li>$P(i|S)$ = sum of $\lambda_k$ for segments choosing $i$.</li>
+<li>$R(S) = \sum_{i \in S} r_i \cdot P(i|S)$.</li>
+<li>For IP: $x_i$ (offer), $y_{k,i}$ (chosen), with 4 constraints + side conditions.</li>
+<li>For upper bound: customized (per-segment max revenue ≥ no-purchase) OR LP relaxation.</li>
+</ol>
+<strong>Traps:</strong> Forgetting no-purchase; confusing utility with revenue; forgetting $\lambda_k$ weights.
+</div>
+
+<h2>Template 4: LP Duality / Shadow Price</h2>
+<div class="callout key">
+<strong>Recognize:</strong> Dual variables provided / "predict revenue change" / "buy more X?"
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>For "predicted change from $\Delta b$": $\Delta R \approx \sum p_i^* \Delta b_i$.</li>
+<li>For "buy more": compare per-unit cost to shadow price.</li>
+<li>For "is primal optimal?": check primal feasibility, dual feasibility, then equal objectives.</li>
+<li>For complementary slackness: $p_i^* > 0 \Rightarrow$ constraint $i$ tight.</li>
+</ol>
+<strong>Traps:</strong> Forgetting weak duality requires BOTH feasible; ignoring sensitivity range.
+</div>
+
+<h2>Template 5: Network Flow LP</h2>
+<div class="callout key">
+<strong>Recognize:</strong> Goods flowing through nodes with supply/demand/transshipment.
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>Sketch the network: nodes, edges, costs, capacities.</li>
+<li>For each node, write flow conservation EXPLICITLY: inflow + supply = outflow + demand.</li>
+<li>If "no Σ notation": enumerate every variable in each constraint.</li>
+<li>For piecewise cost: tier var (capped) + excess var; update conservation.</li>
+</ol>
+<strong>Traps:</strong> Wrong direction of flow conservation; forgetting initial inventory; missing transshipment balance.
+</div>
+
+<h2>Template 6: Shortest / Reliability Path</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "find best path from A to L" with edge weights or reliabilities.
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>If reliabilities: take $-\log r_{ij}$ to convert to additive minimization.</li>
+<li>Set source $b_s = +1$, sink $b_t = -1$, others $= 0$.</li>
+<li>Min $\sum c_{ij} x_{ij}$ s.t. flow conservation, $x_{ij} \in \{0,1\}$.</li>
+<li>For DP solve: $v_i = \min_j(c_{ij} + v_j)$ backward from sink.</li>
+<li>For top-K: iteratively forbid previous paths.</li>
+</ol>
+<strong>Traps:</strong> Log-reliabilities are negative — maximize = least negative.
+</div>
+
+<h2>Template 7: TSP</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "visit each location once and return to start."
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>Build distance matrix (Manhattan or Euclidean per problem).</li>
+<li>Variables $x_{ij} \in \{0,1\}$, $i \ne j$.</li>
+<li>Min $\sum d_{ij} x_{ij}$ s.t. degree=1 in AND out.</li>
+<li>Add SEC: $\sum_{i \in S}\sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$ (via lazy callback).</li>
+</ol>
+<strong>Traps:</strong> Forgetting both directions in SEC ($x_{ij}$ AND $x_{ji}$); wrong $|S|-1$ vs $|S|$.
+</div>
+
+<h2>Template 8: Location (MCLP / p-Median / p-Center)</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "open $p$ facilities" + (a) "within distance D" (MCLP) or (b) "minimize average" (p-median) or (c) "minimize max" (p-center).
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>Define $x_j$ (open), $z_{ij}$ (assign), $y_j$ for MCLP (covered), $r$ for p-center.</li>
+<li>Write the model.</li>
+<li>Use the STRONG form: $z_{ij} \le x_j$ per pair.</li>
+<li>Add cardinality $\sum x_j = p$.</li>
+<li>Add side constraints from the universal patterns table.</li>
+</ol>
+<strong>Traps:</strong> Using weak form when strong is asked; mixing MCLP coverage with p-median assignment.
+</div>
+
+<h2>Template 9: Revenue Management (Bid-Price)</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "fare classes" / "capacity over time."
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>Define $x_j$ = expected number of class $j$ to accept.</li>
+<li>Max $\sum r_j x_j$ s.t. $\sum x_j \le C$, $x_j \le E[D_j]$, $x \ge 0$.</li>
+<li>Solve LP; extract shadow prices $\pi_\ell$.</li>
+<li>Accept request iff $r_j \ge \pi_\ell$ (single-leg) or $\ge \sum_{\ell \in S_j} \pi_\ell$ (multi-leg).</li>
+<li>Re-solve LP at each arrival with updated $b$ and $T - t$.</li>
+</ol>
+<strong>Traps:</strong> Forgetting demand cap; using static allocation instead of dynamic; claiming policy > LP bound.
+</div>
+
+<h2>Template 10: Pricing IP</h2>
+<div class="callout key">
+<strong>Recognize:</strong> "discrete prices to choose from" + linear demand parameters.
+<br><br>
+<strong>Process:</strong>
+<ol>
+<li>Define $x_{i,t} \in \{0,1\}$: product $i$ at price level $t$.</li>
+<li>Add $\sum_t x_{i,t} = 1$ for each $i$.</li>
+<li>If cross-price terms: introduce $y_{i,j,t_1,t_2}$ with BOTH linking directions.</li>
+<li>Objective: baseline ($\alpha_i \cdot t \cdot x_{i,t}$) − own-price ($\beta_i \cdot t^2 \cdot x_{i,t}$) + cross ($\gamma_{i,j} \cdot t_1 t_2 \cdot y$).</li>
+</ol>
+<strong>Traps:</strong> Missing one direction of linking; using $t$ instead of $t^2$ in own-price; wrong sign on $\beta$.
+</div>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

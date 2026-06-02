@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>问题模板 | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">运营分析 — 期末复习</p>
+<nav>
+<a href="index_zh.html">🏠 主页</a>
+<a href="strategy_zh.html">🎯 考试策略</a>
+<a href="week1.html">第一周 — 线性规划对偶</a>
+<a href="week2.html">第二周 — 收益管理</a>
+<a href="week3.html">第三周 — 报童模型</a>
+<a href="week4.html">第四周 — 选址问题</a>
+<a href="week5.html">第五周 — 商品组合</a>
+<a href="week6.html">第六周 — 定价</a>
+<a href="week7.html">第七周 — 网络流</a>
+<a href="week8.html">第八周 — 旅行商问题</a>
+<a href="formulas_zh.html">📐 公式表</a>
+<a href="templates_zh.html" class="active">🧩 问题模板</a>
+<a href="crash_zh.html">🚨 考前一晚冲刺</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>🧩 问题求解模板</h1>
+
+<div class="callout info">针对每种问题类型:如何识别、分步求解流程、所需公式、示例建模和常见陷阱。考试时将其作为决策树菜单使用。</div>
+
+<h2>模板 1:"建立线性规划模型"(生产 / 分配问题)</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"决定生产/运输/分配多少... 以最大化/最小化..."
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>定义决策变量 — 用文字说明每个变量的含义。</li>
+<li>写出目标函数:$\max / \min \sum c_j x_j$。</li>
+<li>写出资源约束:$\sum_j a_{ij} x_j \le b_i$(每种受限投入一条)。</li>
+<li>如适用,写出需求/平衡约束。</li>
+<li>添加非负性约束(如相关则添加 0-1 约束)。</li>
+</ol>
+<strong>陷阱:</strong>忘记非负性约束;遗漏某个平衡节点;题目要求"不使用 Σ"时却写求和符号;单位混淆。
+</div>
+
+<h2>模板 2:报童模型</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"易腐 / 单周期 / 一次性备货决策" + 需求不确定。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>列出参数:$p$、$c$、$s$(或 $c_u$、$c_o$)。</li>
+<li>计算临界分位点 $\alpha = c_u / (c_u + c_o)$。</li>
+<li>识别分布,写出累积分布函数(CDF)。</li>
+<li>通过反函数求解 $F(Q^*) = \alpha$。</li>
+<li>若需求利润:进行积分或使用样本均值。</li>
+</ol>
+<strong>陷阱:</strong>三角分布的二次根选错;忘记残值;$z_\alpha$ 符号误用。
+</div>
+
+<h2>模板 3:选择 / 商品组合</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"具有效用的客户细分" + "决定提供哪些产品"。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>对每个细分 $k$:在 $S \cup \{0\}$ 上求最大效用(必须包含不购买选项!)。</li>
+<li>$P(i|S)$ = 选择产品 $i$ 的细分的 $\lambda_k$ 之和。</li>
+<li>$R(S) = \sum_{i \in S} r_i \cdot P(i|S)$。</li>
+<li>整数规划:$x_i$(是否提供)、$y_{k,i}$(是否被选),含 4 类约束及附加条件。</li>
+<li>求上界:定制法(每个细分的最大收益 ≥ 不购买效用)或线性规划松弛。</li>
+</ol>
+<strong>陷阱:</strong>忘记不购买选项;混淆效用与收益;遗漏 $\lambda_k$ 权重。
+</div>
+
+<h2>模板 4:线性规划对偶 / 影子价格</h2>
+<div class="callout key">
+<strong>识别特征:</strong>题目给出对偶变量 / "预测收益变化" / "是否多买 X?"
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>对"$\Delta b$ 引起的预测变化":$\Delta R \approx \sum p_i^* \Delta b_i$。</li>
+<li>对"是否多买":将单位成本与影子价格比较。</li>
+<li>对"原问题是否最优?":检查原问题可行性、对偶可行性,然后目标值相等。</li>
+<li>互补松弛:$p_i^* > 0 \Rightarrow$ 约束 $i$ 紧绑。</li>
+</ol>
+<strong>陷阱:</strong>忘记弱对偶要求二者都可行;忽视灵敏度范围。
+</div>
+
+<h2>模板 5:网络流线性规划</h2>
+<div class="callout key">
+<strong>识别特征:</strong>商品通过具有供应/需求/转运的节点流动。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>画出网络:节点、边、成本、容量。</li>
+<li>对每个节点,显式写出流量守恒:流入 + 供应 = 流出 + 需求。</li>
+<li>若"不使用 Σ 符号":在每条约束中列举每个变量。</li>
+<li>分段成本:分段变量(有上限)+ 超额变量;更新守恒方程。</li>
+</ol>
+<strong>陷阱:</strong>流量守恒方向错误;忘记初始库存;遗漏转运平衡。
+</div>
+
+<h2>模板 6:最短路径 / 可靠性路径</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"在带边权或可靠性的图上找从 A 到 L 的最优路径"。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>若为可靠性:取 $-\log r_{ij}$ 转换为加性最小化问题。</li>
+<li>设源点 $b_s = +1$,汇点 $b_t = -1$,其余 $= 0$。</li>
+<li>$\min \sum c_{ij} x_{ij}$,约束:流量守恒,$x_{ij} \in \{0,1\}$。</li>
+<li>动态规划求解:$v_i = \min_j(c_{ij} + v_j)$,从汇点反向递推。</li>
+<li>求前 K 条路径:迭代禁止此前的路径。</li>
+</ol>
+<strong>陷阱:</strong>对数可靠性为负数 — 最大化 = 最不负的值。
+</div>
+
+<h2>模板 7:旅行商问题(TSP)</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"访问每个地点一次并返回起点"。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>构建距离矩阵(根据题目使用曼哈顿或欧几里得距离)。</li>
+<li>变量 $x_{ij} \in \{0,1\}$,$i \ne j$。</li>
+<li>$\min \sum d_{ij} x_{ij}$,约束:每个节点入度=1 且出度=1。</li>
+<li>添加子回路消除约束(SEC):$\sum_{i \in S}\sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$(通过 lazy callback 实现)。</li>
+</ol>
+<strong>陷阱:</strong>SEC 忘记双向($x_{ij}$ 和 $x_{ji}$);$|S|-1$ 与 $|S|$ 写错。
+</div>
+
+<h2>模板 8:选址问题(MCLP / p-中位 / p-中心)</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"开设 $p$ 个设施" + (a)"在距离 D 内"(MCLP)或 (b)"最小化平均"(p-中位)或 (c)"最小化最大"(p-中心)。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>定义 $x_j$(是否开设)、$z_{ij}$(是否分配)、MCLP 中的 $y_j$(是否被覆盖)、p-中心中的 $r$。</li>
+<li>建立模型。</li>
+<li>使用强形式:$z_{ij} \le x_j$(逐对约束)。</li>
+<li>添加基数约束 $\sum x_j = p$。</li>
+<li>从通用模式表中加入附加约束。</li>
+</ol>
+<strong>陷阱:</strong>题目要求强形式时使用了弱形式;将 MCLP 覆盖与 p-中位分配混淆。
+</div>
+
+<h2>模板 9:收益管理(投标价格)</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"票价等级" / "时间维度上的容量"。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>定义 $x_j$ = 期望接受的等级 $j$ 数量。</li>
+<li>$\max \sum r_j x_j$,约束 $\sum x_j \le C$、$x_j \le E[D_j]$、$x \ge 0$。</li>
+<li>求解线性规划;提取影子价格 $\pi_\ell$。</li>
+<li>接受请求当且仅当 $r_j \ge \pi_\ell$(单航段)或 $\ge \sum_{\ell \in S_j} \pi_\ell$(多航段)。</li>
+<li>在每次到达时使用更新后的 $b$ 与 $T - t$ 重新求解线性规划。</li>
+</ol>
+<strong>陷阱:</strong>忘记需求上限;使用静态分配而非动态分配;声称策略收益 > 线性规划上界。
+</div>
+
+<h2>模板 10:定价整数规划</h2>
+<div class="callout key">
+<strong>识别特征:</strong>"离散价格档位可选" + 线性需求参数。
+<br><br>
+<strong>求解流程:</strong>
+<ol>
+<li>定义 $x_{i,t} \in \{0,1\}$:产品 $i$ 在价格档位 $t$ 上。</li>
+<li>对每个 $i$ 添加 $\sum_t x_{i,t} = 1$。</li>
+<li>若存在交叉价格项:引入 $y_{i,j,t_1,t_2}$,并加入双向链接约束。</li>
+<li>目标函数:基础项($\alpha_i \cdot t \cdot x_{i,t}$)− 自价格项($\beta_i \cdot t^2 \cdot x_{i,t}$)+ 交叉项($\gamma_{i,j} \cdot t_1 t_2 \cdot y$)。</li>
+</ol>
+<strong>陷阱:</strong>遗漏一个方向的链接约束;自价格项中使用 $t$ 而非 $t^2$;$\beta$ 符号弄错。
+</div>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

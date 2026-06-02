@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 4 — Location Models | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Management</a>
+<a href="week3.html">Week 3 — Newsvendor Problem</a>
+<a href="week4.html" class="active">Week 4 — Location Models</a>
+<a href="week5.html">Week 5 — Assortment Optimization</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — Traveling Salesman</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+<main>
+<div class="week-banner">
+<div class="week-meta">
+<span class="week-num" data-en="Week 4" data-zh="第4周">Week 4</span>
+<h1><span data-en="Location Models" data-zh="选址问题">Location Models</span> <span class="cn">选址问题</span></h1>
+<p class="topics" data-en="MCLP, p-median, p-center, formulation strength (strong vs weak constraints)" data-zh="MCLP, p-median, p-center, formulation strength (strong vs weak constraints)">MCLP, p-median, p-center, formulation strength (strong vs weak constraints)</p>
+</div>
+<div class="open-pdf">
+<strong><span data-en="📖 Open lecture PDF alongside:" data-zh="📖 同时打开讲义PDF：">📖 Open lecture PDF alongside:</span></strong><br>
+<code>../4/Lecture4_LocationModels.pdf  +  Lecture4_FormulationStrength.pdf</code>
+</div>
+</div>
+<article id="content" class="markdown-body"></article>
+</main>
+
+<script id="md-en" type="text/markdown"># Week 4 — Location Models & Formulation Strength
+
+## 0. Big Picture
+
+**The core problem:** where to place facilities — hospitals, AEDs, bike docks, warehouses — to serve customers. Three different objectives lead to three different models. **Formulation matters dramatically**: the SAME problem with different constraint structures can solve 10-100× faster.
+
+## 1. The Three Core Models
+
+| Model | Goal | Real example | Keyword cue |
+|-------|------|--------------|-------------|
+| **MCLP** | Max # customers within distance $D$ | AED placement | "within distance D", "coverage" |
+| **p-median** | Min total/avg distance | Bike docks, mailboxes | "average travel time", "total distance" |
+| **p-center** | Min worst-case (max) distance | Hospital ERs | "worst-case", "no one too far" |
+
+## 2. Maximum Coverage (MCLP — 最大覆盖)
+
+### Setup
+- $n$ candidate sites, $m$ demand points, coverage distance $D$
+- Open exactly $p$ facilities, maximize covered customers
+- $N(j)$ = set of sites within $D$ of customer $j$
+
+### Variables
+- $x_i \in \{0,1\}$: open site $i$
+- $y_j \in \{0,1\}$: customer $j$ is covered
+
+### Formulation
+$$\max \sum_{j=1}^{m} y_j$$
+$$\text{s.t. } y_j \le \sum_{i \in N(j)} x_i \quad \forall j$$
+$$\sum_{i=1}^{n} x_i = p$$
+$$x_i, y_j \in \{0,1\}$$
+
+**Meaning of constraints:**
+- $y_j \le \sum_{i \in N(j)} x_i$: customer $j$ can be "covered" only if at least one covering site is open.
+- $\sum x_i = p$: open exactly $p$.
+
+### AED Example (Lecture)
+Prof. Siddiq's research: place AEDs in public buildings to maximize coverage of historical cardiac arrest locations. Within 2-minute walk (~200m). Solved via MCLP.
+
+### Tiny Example
+3 candidate stations, 5 customers, $D = 400$m:
+
+| Covered? | S1 | S2 | S3 |
+|---|---|---|---|
+| C1 | ✓ | | |
+| C2 | | ✓ | |
+| C3 | ✓ | ✓ | |
+| C4 | | ✓ | ✓ |
+| C5 | ✓ | | ✓ |
+
+With $p=2$: open S1+S2 covers C1, C2, C3, C4 (4 customers).
+
+## 3. p-Median Problem (中位选址)
+
+### Setup
+- Open $p$ facilities AND assign each customer to one open facility
+- Minimize TOTAL (or average) distance
+
+### Variables
+- $x_j \in \{0,1\}$: open facility $j$
+- $z_{ij} \in \{0,1\}$: customer $i$ assigned to facility $j$
+
+### Formulation
+$$\min \sum_i \sum_j d_{ij} z_{ij}$$
+$$\text{s.t. } \sum_j z_{ij} = 1 \quad \forall i \quad \text{(each customer assigned)}$$
+$$z_{ij} \le x_j \quad \forall i,j \quad \text{(assign only if open — STRONG form)}$$
+$$\sum_j x_j = p$$
+$$x_j, z_{ij} \in \{0,1\}$$
+
+**Why $z_{ij} \le x_j$?** If facility $j$ is closed ($x_j = 0$), nobody can be assigned to it.
+
+### Insight
+At optimality, each customer is assigned to its **nearest open facility** — but the LP doesn't enforce that directly; it falls out from minimization.
+
+### Bike Dock Example (Notebook)
+350 customers, 42 candidate sites, $p = 5$. Optimal: stations [0, 6, 24, 34, 41], total distance 159,124m, avg 454.64m/customer, solve time 0.22s.
+
+## 4. p-Center Problem (中心选址)
+
+### Setup
+Same as p-median but minimize the MAX distance any customer travels.
+
+### Variables (add)
+- $r$ = max distance (continuous auxiliary variable)
+
+### Formulation
+$$\min r$$
+$$\text{s.t. } r \ge \sum_j d_{ij} z_{ij} \quad \forall i \quad \text{(worst-case constraint)}$$
+$$\sum_j z_{ij} = 1 \quad \forall i$$
+$$z_{ij} \le x_j$$
+$$\sum_j x_j = p$$
+$$r \ge 0, \quad x_j, z_{ij} \in \{0,1\}$$
+
+**How min-r works:** $r$ must be ≥ each customer's distance. Solver pushes $r$ down to MAX customer distance.
+
+### p-Median vs p-Center
+- p-median: most people short walks, a few far
+- p-center: no one too far (fairness)
+- Ambulance/ER → p-center; mail → p-median
+
+### Bike Dock p-Center
+Max distance ≈ 1,371m. Solution spreads docks more evenly (includes outlier near Beverly Glen/Sunset that p-median skipped).
+
+## 5. The Dock Station Notebook — Cell Walkthrough
+
+### Cells 1-11: Load data
+```python
+customers_df = pd.read_csv('customers_raw_v2.csv')  # 350
+stations_df = pd.read_csv('stations_raw_v2.csv')    # 42
+distance_df = pd.read_csv('stations_dist_mat_v2.csv')
+m = 350; n = 42
+distance_2d = distance_df['Distance'].values.reshape(n, m)
+```
+
+### Cell 13: Model 1 (Strong Formulation, p-median)
+```python
+m1 = Model()
+x = m1.addVars(n, vtype=GRB.BINARY)
+y = m1.addVars(n, m, vtype=GRB.BINARY)
+for j in range(m):
+    m1.addConstr(sum(y[i,j] for i in range(n)) == 1)
+    for i in range(n):
+        m1.addConstr(y[i,j] <= x[i])  # STRONG: per (i,j)
+m1.addConstr(sum(x[i] for i in range(n)) == 5)
+m1.setObjective((1.0/m) * sum(distance_2d[i,j]*y[i,j] for i in range(n) for j in range(m)), GRB.MINIMIZE)
+m1.optimize()
+# Optimal: [0,6,24,34,41], 454.64 avg, 0.22s
+```
+
+### Cell 16: Model 2 (Weak Formulation, p-median)
+```python
+# Same except linking:
+for i in range(n):
+    m2.addConstr(sum(y2[i,j] for j in range(m)) <= m * x2[i])  # WEAK: aggregated
+# Same optimal IP solution, but 3.14s (14× slower!)
+```
+
+### Cell 21: LP Relaxations
+```python
+r1 = m1.relax(); r1.optimize()  # 159,124 (= integer optimum!)
+r2 = m2.relax(); r2.optimize()  # 232.76 (loose!)
+```
+
+### Cells 24-28: Visualization (Folium maps)
+### Cells 30-35: MCLP version (D=400m, 197/350 covered with p=5)
+### Cells 39-42: p-Center version (max dist = 1,371m)
+
+## 6. Formulation Strength — Why It Matters 强公式
+
+### LP Relaxation (线性松弛)
+Drop binary, allow $x \in [0,1]$. The LP is easier to solve. For MIN problem:
+$$Z_{LP} \le Z^*_{IP}$$
+LP gives a LOWER BOUND on integer optimum.
+
+### Branch-and-Bound Uses LP Bounds
+1. Solve LP relaxation at root.
+2. If LP optimum is integer, DONE.
+3. Otherwise, branch (split on fractional variable), recurse.
+4. **Tighter LP bound = better pruning = fewer nodes = faster solve.**
+
+### Strong vs Weak Constraints (CRITICAL)
+**Strong (disaggregated):** $z_{ij} \le x_j$ for EACH (i,j) pair.
+**Weak (aggregated):** $\sum_j y_{ij} \le m \cdot x_i$.
+
+Both VALID for IP. But the strong form has a TIGHTER LP feasible region:
+- Strong LP region ⊆ Weak LP region
+- Therefore Strong LP optimum ≥ Weak LP optimum (for min)
+- Strong gives BETTER bound
+
+### Dock Station Numbers
+| Metric | Strong (Model 1) | Weak (Model 2) |
+|---|---|---|
+| LP relaxation | 159,124 | 232.76 |
+| Integer optimum | 159,124 | 159,124 (same!) |
+| Gap at root | 0% | 48.8% |
+| Nodes explored | 1 | 198 |
+| Solve time | 0.22s | 3.14s |
+
+### Tiny Example
+$\max x_1 + x_2$ s.t. $x_1 \le 2, x_2 \le 2$. Strong: LP = 4 (tight). Tighter alternative: $x_1 + x_2 \le 2$. LP = 2 (= IP).
+
+## 7. Common Modifications
+
+| Requirement | Constraint |
+|---|---|
+| Each facility serves ≤ K customers | $\sum_i z_{ij} \le K \cdot x_j$ |
+| Open between $m$ and $M$ | $m \le \sum_j x_j \le M$ |
+| Facility $j$ must open | $x_j = 1$ |
+| Mutually exclusive | $x_i + x_j \le 1$ |
+| If $i$ open then $k$ open | $x_i \le x_k$ |
+| Open at least one of $A, B, C$ | $x_A + x_B + x_C \ge 1$ |
+
+## 8. Step-by-Step Method
+
+### (a) Identify model type
+- "minimize average/total distance" → p-median
+- "minimize worst/max distance" → p-center
+- "within distance D" → MCLP
+
+### (b) Define variables
+- $x_j$: open facility
+- $z_{ij}$: assign customer
+- $y_j$: covered (MCLP)
+- $r$: max distance (p-center)
+
+### (c) Write objective
+- p-median: $\min \sum d_{ij} z_{ij}$
+- p-center: $\min r$
+- MCLP: $\max \sum y_j$
+
+### (d) Write constraints in order
+1. Assignment / coverage
+2. Linking (use STRONG form)
+3. Worst-case (p-center only)
+4. Cardinality
+5. Side constraints
+
+### (e) Choose strong formulation if asked
+
+## 9. Common Mistakes ⚠️
+
+1. **Weak instead of strong constraint** when not asked.
+2. **Forgetting binary declarations.**
+3. **Using $= p$** when "at most $p$" → should be $\le p$.
+4. **MCLP backwards:** $y_j \ge \sum$ instead of $y_j \le \sum$.
+5. **Forgetting r ≥ ...** in p-center.
+6. **Mixing assignment and coverage:** MCLP uses $y_j$ (coverage); p-median uses $z_{ij}$ (assignment).
+7. **Adding redundant strong + weak** (wastes solve time).
+8. **Hard-coding numbers** when generalization expected.
+
+## 10. Exam Relevance
+
+Exam slides explicitly list 3 location question types:
+1. "Formulate as MCLP / p-median / p-center."
+2. "Write two formulations of p-median. Which is stronger? Why?"
+3. "Modify formulation to add side constraint (e.g., capacity K per facility)."
+
+## 11. Mini Practice
+
+**Q1.** "Place 2 hospitals minimizing average response time." → p-median.
+
+**Q2.** "Place 5 AEDs maximize coverage within 300m." → MCLP:
+$$\max \sum_j y_j \text{ s.t. } y_j \le \sum_{i \in N(j)} x_i, \sum x_i = 5, \text{binary}$$
+
+**Q3.** "Each dock serves ≤ 20 customers." Constraint: $\sum_i z_{ij} \le 20 x_j \quad \forall j$.
+
+**Q4.** Strong LP value = 1200, weak LP = 950 (min problem). Which stronger? Strong has 1200 ≥ 950. Wait — for MIN problem, STRONGER means HIGHER LP value (tighter bound from below). So 1200 is stronger.
+
+**Q5.** "If facility 3 opens, then facility 7 must also open." Constraint: $x_3 \le x_7$.
+
+## 12. Cheat Card
+
+| Model | Objective | Variables | Key Constraints |
+|-------|-----------|-----------|-----------------|
+| MCLP | $\max \sum_j y_j$ | $x_i, y_j$ | $y_j \le \sum_{i\in N(j)} x_i$; $\sum x_i = p$ |
+| p-median | $\min \sum_i\sum_j d_{ij} z_{ij}$ | $x_j, z_{ij}$ | $\sum_j z_{ij}=1$; $z_{ij}\le x_j$ (STRONG); $\sum x_j = p$ |
+| p-center | $\min r$ | $x_j, z_{ij}, r$ | $r \ge \sum_j d_{ij} z_{ij}$ + p-median constraints |
+
+**Formulation strength rule:** Strong (disaggregated $z_{ij} \le x_j$) beats Weak (aggregated $\sum_j z_{ij} \le m \cdot x_i$) — tighter LP, faster solve.
+
+---
+
+## 🎙️ Lecture Transcript Insights — Beyond the Slides
+
+From Prof. Misic's 4/22 lecture.
+
+### Three Models — When to Pick Which (Repeated for Emphasis)
+
+- **p-Median:** Best when equity in AVERAGE service is the goal. General efficiency.
+- **MCLP:** Best when a distance THRESHOLD matters (e.g., hospital within 10 min). Coverage is binary — either served or not.
+- **p-Center:** Best when you must protect the FURTHEST customer. Real application: defibrillator (AED) placement — every person needs quick access, not just on average.
+
+Not arbitrary — the problem's wording determines the model. If decision-maker cares about "bad outcomes" → p-center. If only threshold matters → MCLP.
+
+### Formulation Strength — THE Big Idea
+
+**Concrete numbers from dock-location notebook:**
+
+| Formulation | LP relaxation value | Solve time |
+|---|---|---|
+| Strong: $y_{ij} \le x_i$ per pair | **454.64** (= integer optimum!) | 0.18 s |
+| Weak: $\sum_j y_{ij} \le M \cdot x_i$ aggregated | **232** (loose!) | 1.6 s (~9× slower) |
+
+> *"Be explicit with constraints, not aggregate. Tighter formulation = better bounds = faster branch-and-bound = shorter solve times."*
+
+Why the difference? The aggregate constraint allows fractional spreading (e.g., $y_{i1}=0.3, y_{i2}=0.6, y_{i3}=0.4$ sums to 1.3 ≤ 1.5 even though 0.6 > 0.5). The disaggregated form blocks this directly.
+
+### MCLP Formulation Nuances
+
+**Coverage is FLEXIBLE.** $a_{ij}$ can be distance-based (400m threshold) or context-dependent (e.g., "ultra-fast scooter only at Westwood dock" → that dock covers specific customers).
+
+**Key constraint trick:**
+> Coverage constraint $z_j \le \sum_i a_{ij} x_i$ uses ≤ (not =) because MAXIMIZATION naturally drives $z_j$ to 1 when covered. If RHS ≥ 1, objective wants $z_j = 1$.
+
+**Student Q&A:** "Why not just sum $a_{ij}$ without $x_i$?" Because that ignores WHICH locations you opened. You need $a_{ij} \cdot x_i$ to count coverage only from selected locations.
+
+### Visual Differences in Optimal Solutions
+
+**p-Median:** Docks in CENTER of dense customer clusters (minimizes average distance). Spreads more evenly.
+
+**MCLP (400m threshold):** More docks in DENSE regions, fewer on periphery. AVOIDS opening docks in sparse areas (don't help coverage). 
+- Example: West of campus → 1 dock in p-median, but 2 docks in MCLP (dense area, more coverage gained).
+
+**p-Center:** Spreads docks to ensure WORST customer isn't too far. Different from both above.
+
+### Parameter Sensitivity (Coverage Curve)
+
+Sweep "open exactly $p$ stations" from 0 to 42, plot coverage vs $p$:
+- Concave curve, diminishing returns
+- "Elbow point" where additional stations add little value
+- **Hard ceiling:** Not all 350 customers coverable even with all 42 stations. 40 are too far from all candidate docks → max coverage = **310, not 350**.
+
+> *"Sensitivity via parameter sweep is general — useful for ANY problem with uncertain parameters. Shows which parameter changes matter most."*
+
+### Technical Exam Tips
+
+1. **Binary logic:** $y_{ij} \le x_i$ reads as "IF customer assigned, location MUST open" (implication). Contrapositive: "IF location closed, customer not assigned."
+2. **Don't use $=$ in MCLP coverage constraint** — that forces each customer covered EXACTLY once, often infeasible.
+3. **LP relaxation = lower bound** (for min). Gap to integer = formulation quality.
+4. **Dividing objective by $m$** doesn't change solution, only scales (for reporting "average").
+
+### Formulation Strength Intuition (Exam Key)
+
+Given two valid formulations:
+- More EXPLICIT constraints (not aggregated) = stronger lower bound = faster integer solve.
+- Fewer degrees of freedom for fractional solutions = harder to move away from integer.
+
+Real-world impact: 10–100× faster solve. **Exam likely asks: compare two formulations, predict which solves faster (stronger one wins).**
+</script>
+<script id="md-zh" type="text/markdown"># 第4周 — 选址问题与公式强度
+
+## 0. 全局概览
+
+**核心问题：** 在哪里放置设施 —— 医院、AED（自动体外除颤器）、共享单车停靠点、仓库 —— 以服务客户。三种不同的目标导致三种不同的模型。**公式形式至关重要**：同一个问题用不同的约束结构表达，求解速度可以快 10-100 倍。
+
+## 1. 三个核心模型
+
+| 模型 | 目标 | 实际例子 | 关键词提示 |
+|-------|------|--------------|-------------|
+| **MCLP（最大覆盖）** | 最大化距离 $D$ 内的客户数 | AED 布置 | "在距离 D 内"、"覆盖" |
+| **p-中位选址** | 最小化总距离/平均距离 | 共享单车停靠点、邮箱 | "平均出行时间"、"总距离" |
+| **p-中心选址** | 最小化最坏情况（最大）距离 | 医院急诊室 | "最坏情况"、"任何人都不能太远" |
+
+## 2. 最大覆盖（MCLP — 最大覆盖）
+
+### 设置
+- $n$ 个候选选址，$m$ 个需求点，覆盖距离 $D$
+- 恰好开设 $p$ 个设施，最大化被覆盖的客户数
+- $N(j)$ = 距离客户 $j$ 在 $D$ 范围内的选址集合
+
+### 变量
+- $x_i \in \{0,1\}$：开设选址 $i$
+- $y_j \in \{0,1\}$：客户 $j$ 被覆盖
+
+### 公式
+$$\max \sum_{j=1}^{m} y_j$$
+$$\text{s.t. } y_j \le \sum_{i \in N(j)} x_i \quad \forall j$$
+$$\sum_{i=1}^{n} x_i = p$$
+$$x_i, y_j \in \{0,1\}$$
+
+**约束的含义：**
+- $y_j \le \sum_{i \in N(j)} x_i$：客户 $j$ 只有在至少一个能覆盖它的选址开设时才能被"覆盖"。
+- $\sum x_i = p$：恰好开设 $p$ 个。
+
+### AED 示例（讲座）
+Siddiq 教授的研究：在公共建筑中放置 AED，以最大化对历史心脏骤停发生地点的覆盖。在 2 分钟步行范围内（约 200 米）。通过 MCLP 求解。
+
+### 小型示例
+3 个候选站点，5 个客户，$D = 400$ 米：
+
+| 是否覆盖？ | S1 | S2 | S3 |
+|---|---|---|---|
+| C1 | ✓ | | |
+| C2 | | ✓ | |
+| C3 | ✓ | ✓ | |
+| C4 | | ✓ | ✓ |
+| C5 | ✓ | | ✓ |
+
+当 $p=2$ 时：开设 S1+S2 覆盖 C1、C2、C3、C4（4 个客户）。
+
+## 3. p-中位选址问题（中位选址）
+
+### 设置
+- 开设 $p$ 个设施 并 将每个客户分配给一个开设的设施
+- 最小化总（或平均）距离
+
+### 变量
+- $x_j \in \{0,1\}$：开设设施 $j$
+- $z_{ij} \in \{0,1\}$：客户 $i$ 被分配到设施 $j$
+
+### 公式
+$$\min \sum_i \sum_j d_{ij} z_{ij}$$
+$$\text{s.t. } \sum_j z_{ij} = 1 \quad \forall i \quad \text{（每个客户都被分配）}$$
+$$z_{ij} \le x_j \quad \forall i,j \quad \text{（仅当开设时才能分配 — 强公式）}$$
+$$\sum_j x_j = p$$
+$$x_j, z_{ij} \in \{0,1\}$$
+
+**为什么 $z_{ij} \le x_j$？** 如果设施 $j$ 关闭（$x_j = 0$），任何人都不能被分配到它。
+
+### 洞见
+在最优解处，每个客户被分配到其**最近的开设设施** —— 但 LP 并不直接强制这一点；它从最小化中自然产生。
+
+### 共享单车停靠点示例（Notebook）
+350 个客户，42 个候选选址，$p = 5$。最优解：站点 [0, 6, 24, 34, 41]，总距离 159,124 米，平均每客户 454.64 米，求解时间 0.22 秒。
+
+## 4. p-中心选址问题（中心选址）
+
+### 设置
+与 p-中位选址相同，但最小化任何客户出行的最大距离。
+
+### 变量（增加）
+- $r$ = 最大距离（连续辅助变量）
+
+### 公式
+$$\min r$$
+$$\text{s.t. } r \ge \sum_j d_{ij} z_{ij} \quad \forall i \quad \text{（最坏情况约束）}$$
+$$\sum_j z_{ij} = 1 \quad \forall i$$
+$$z_{ij} \le x_j$$
+$$\sum_j x_j = p$$
+$$r \ge 0, \quad x_j, z_{ij} \in \{0,1\}$$
+
+**min-r 如何工作：** $r$ 必须 ≥ 每个客户的距离。求解器将 $r$ 推到客户的最大距离。
+
+### p-中位选址 vs p-中心选址
+- p-中位选址：大多数人步行距离短，少数人较远
+- p-中心选址：没有人太远（公平性）
+- 救护车/急诊室 → p-中心选址；邮件 → p-中位选址
+
+### 共享单车停靠点 p-中心选址
+最大距离约为 1,371 米。该解将停靠点更均匀地分布（包括靠近 Beverly Glen/Sunset 的离群点，这是 p-中位选址跳过的）。
+
+## 5. 共享单车停靠点 Notebook — 单元格逐步讲解
+
+### 单元格 1-11：加载数据
+```python
+customers_df = pd.read_csv('customers_raw_v2.csv')  # 350
+stations_df = pd.read_csv('stations_raw_v2.csv')    # 42
+distance_df = pd.read_csv('stations_dist_mat_v2.csv')
+m = 350; n = 42
+distance_2d = distance_df['Distance'].values.reshape(n, m)
+```
+
+### 单元格 13：模型 1（强公式，p-中位选址）
+```python
+m1 = Model()
+x = m1.addVars(n, vtype=GRB.BINARY)
+y = m1.addVars(n, m, vtype=GRB.BINARY)
+for j in range(m):
+    m1.addConstr(sum(y[i,j] for i in range(n)) == 1)
+    for i in range(n):
+        m1.addConstr(y[i,j] <= x[i])  # STRONG: per (i,j)
+m1.addConstr(sum(x[i] for i in range(n)) == 5)
+m1.setObjective((1.0/m) * sum(distance_2d[i,j]*y[i,j] for i in range(n) for j in range(m)), GRB.MINIMIZE)
+m1.optimize()
+# Optimal: [0,6,24,34,41], 454.64 avg, 0.22s
+```
+
+### 单元格 16：模型 2（弱公式，p-中位选址）
+```python
+# Same except linking:
+for i in range(n):
+    m2.addConstr(sum(y2[i,j] for j in range(m)) <= m * x2[i])  # WEAK: aggregated
+# Same optimal IP solution, but 3.14s (14× slower!)
+```
+
+### 单元格 21：LP 松弛
+```python
+r1 = m1.relax(); r1.optimize()  # 159,124 (= integer optimum!)
+r2 = m2.relax(); r2.optimize()  # 232.76 (loose!)
+```
+
+### 单元格 24-28：可视化（Folium 地图）
+### 单元格 30-35：MCLP 版本（D=400m，p=5 时覆盖 197/350 个客户）
+### 单元格 39-42：p-中心选址版本（最大距离 = 1,371 米）
+
+## 6. 公式强度 — 为什么重要 强公式
+
+### LP 松弛（线性松弛）
+去除二元约束，允许 $x \in [0,1]$。LP 更容易求解。对于最小化问题：
+$$Z_{LP} \le Z^*_{IP}$$
+LP 给出整数最优解的下界。
+
+### 分支定界使用 LP 边界
+1. 在根节点求解 LP 松弛。
+2. 如果 LP 最优解是整数，完成。
+3. 否则，分支（在分数变量上拆分），递归。
+4. **更紧的 LP 边界 = 更好的剪枝 = 更少的节点 = 更快的求解。**
+
+### 强约束 vs 弱约束（关键）
+**强（分解形式）：** $z_{ij} \le x_j$ 对每个 (i,j) 对。
+**弱（聚合形式）：** $\sum_j y_{ij} \le m \cdot x_i$。
+
+两者对 IP 都是有效的。但强公式有一个更紧的 LP 可行域：
+- 强公式 LP 域 ⊆ 弱公式 LP 域
+- 因此 强公式 LP 最优解 ≥ 弱公式 LP 最优解（对最小化问题）
+- 强公式给出更好的边界
+
+### 共享单车停靠点数据
+| 指标 | 强公式（模型 1） | 弱公式（模型 2） |
+|---|---|---|
+| LP 松弛 | 159,124 | 232.76 |
+| 整数最优解 | 159,124 | 159,124（相同！） |
+| 根节点的间隙 | 0% | 48.8% |
+| 探索的节点数 | 1 | 198 |
+| 求解时间 | 0.22 秒 | 3.14 秒 |
+
+### 小型示例
+$\max x_1 + x_2$ s.t. $x_1 \le 2, x_2 \le 2$。强公式：LP = 4（紧）。更紧的替代方案：$x_1 + x_2 \le 2$。LP = 2 (= IP)。
+
+## 7. 常见修改
+
+| 要求 | 约束 |
+|---|---|
+| 每个设施服务 ≤ K 个客户 | $\sum_i z_{ij} \le K \cdot x_j$ |
+| 开设数量在 $m$ 和 $M$ 之间 | $m \le \sum_j x_j \le M$ |
+| 设施 $j$ 必须开设 | $x_j = 1$ |
+| 互斥 | $x_i + x_j \le 1$ |
+| 如果 $i$ 开设则 $k$ 开设 | $x_i \le x_k$ |
+| 至少开设 $A, B, C$ 中的一个 | $x_A + x_B + x_C \ge 1$ |
+
+## 8. 分步方法
+
+### (a) 识别模型类型
+- "最小化平均/总距离" → p-中位选址
+- "最小化最坏/最大距离" → p-中心选址
+- "在距离 D 内" → MCLP
+
+### (b) 定义变量
+- $x_j$：开设设施
+- $z_{ij}$：分配客户
+- $y_j$：被覆盖（MCLP）
+- $r$：最大距离（p-中心选址）
+
+### (c) 写目标函数
+- p-中位选址：$\min \sum d_{ij} z_{ij}$
+- p-中心选址：$\min r$
+- MCLP：$\max \sum y_j$
+
+### (d) 按顺序写约束
+1. 分配 / 覆盖
+2. 关联（使用强公式）
+3. 最坏情况（仅 p-中心选址）
+4. 基数约束
+5. 附加约束
+
+### (e) 如果被要求，选择强公式
+
+## 9. 常见错误 ⚠️
+
+1. **当未被要求时使用弱约束而不是强约束。**
+2. **忘记声明二元变量。**
+3. **当"最多 $p$ 个"时使用 $= p$** → 应该是 $\le p$。
+4. **MCLP 方向反了：** $y_j \ge \sum$ 而不是 $y_j \le \sum$。
+5. **在 p-中心选址中忘记 r ≥ ...**。
+6. **混淆分配与覆盖：** MCLP 使用 $y_j$（覆盖）；p-中位选址使用 $z_{ij}$（分配）。
+7. **添加冗余的强 + 弱约束**（浪费求解时间）。
+8. **当期望通用化时硬编码数字。**
+
+## 10. 考试相关性
+
+考试幻灯片明确列出 3 种选址问题类型：
+1. "公式化为 MCLP / p-中位选址 / p-中心选址。"
+2. "写出 p-中位选址的两种公式。哪个更强？为什么？"
+3. "修改公式以添加附加约束（例如，每个设施容量 K）。"
+
+## 11. 迷你练习
+
+**Q1.** "放置 2 家医院以最小化平均响应时间。" → p-中位选址。
+
+**Q2.** "放置 5 台 AED 以最大化 300 米内的覆盖。" → MCLP：
+$$\max \sum_j y_j \text{ s.t. } y_j \le \sum_{i \in N(j)} x_i, \sum x_i = 5, \text{binary}$$
+
+**Q3.** "每个停靠点服务 ≤ 20 个客户。" 约束：$\sum_i z_{ij} \le 20 x_j \quad \forall j$。
+
+**Q4.** 强公式 LP 值 = 1200，弱公式 LP = 950（最小化问题）。哪个更强？强公式有 1200 ≥ 950。等等 —— 对于最小化问题，"更强"意味着 LP 值更高（从下方更紧的边界）。所以 1200 更强。
+
+**Q5.** "如果设施 3 开设，则设施 7 也必须开设。" 约束：$x_3 \le x_7$。
+
+## 12. 速查卡
+
+| 模型 | 目标 | 变量 | 关键约束 |
+|-------|-----------|-----------|-----------------|
+| MCLP | $\max \sum_j y_j$ | $x_i, y_j$ | $y_j \le \sum_{i\in N(j)} x_i$; $\sum x_i = p$ |
+| p-中位选址 | $\min \sum_i\sum_j d_{ij} z_{ij}$ | $x_j, z_{ij}$ | $\sum_j z_{ij}=1$; $z_{ij}\le x_j$（强）; $\sum_j x_j = p$ |
+| p-中心选址 | $\min r$ | $x_j, z_{ij}, r$ | $r \ge \sum_j d_{ij} z_{ij}$ + p-中位选址约束 |
+
+**公式强度规则：** 强公式（分解形式 $z_{ij} \le x_j$）胜过弱公式（聚合形式 $\sum_j z_{ij} \le m \cdot x_i$）—— LP 更紧，求解更快。
+
+---
+
+## 🎙️ 讲座录音洞见 — 幻灯片之外
+
+来自 Misic 教授 4/22 的讲座。
+
+### 三个模型 — 何时选哪个（重复强调）
+
+- **p-中位选址：** 当目标是平均服务的公平性时最佳。一般效率。
+- **MCLP：** 当距离阈值很重要时最佳（例如，10 分钟内的医院）。覆盖是二元的 —— 要么被服务，要么不被服务。
+- **p-中心选址：** 当你必须保护最远的客户时最佳。实际应用：除颤器（AED）布置 —— 每个人都需要快速访问，而不仅仅是平均而言。
+
+不是随意的 —— 问题的措辞决定了模型。如果决策者关心"坏的结果"→ p-中心选址。如果只关心阈值 → MCLP。
+
+### 公式强度 — 最重要的概念
+
+**共享单车选址 notebook 的具体数字：**
+
+| 公式 | LP 松弛值 | 求解时间 |
+|---|---|---|
+| 强公式：每对 $y_{ij} \le x_i$ | **454.64**（= 整数最优解！） | 0.18 秒 |
+| 弱公式：$\sum_j y_{ij} \le M \cdot x_i$ 聚合 | **232**（松！） | 1.6 秒（约慢 9 倍） |
+
+> *"明确约束，不要聚合。更紧的公式 = 更好的边界 = 更快的分支定界 = 更短的求解时间。"*
+
+为什么有差异？聚合约束允许分数分散（例如，$y_{i1}=0.3, y_{i2}=0.6, y_{i3}=0.4$ 总和为 1.3 ≤ 1.5，即使 0.6 > 0.5）。分解形式直接阻止这种情况。
+
+### MCLP 公式的细微之处
+
+**覆盖是灵活的。** $a_{ij}$ 可以基于距离（400 米阈值）或上下文相关（例如，"超快滑板车仅在 Westwood 停靠点" → 该停靠点覆盖特定客户）。
+
+**关键约束技巧：**
+> 覆盖约束 $z_j \le \sum_i a_{ij} x_i$ 使用 ≤（而不是 =），因为最大化自然驱动 $z_j$ 在被覆盖时为 1。如果右侧 ≥ 1，目标函数希望 $z_j = 1$。
+
+**学生问答：** "为什么不直接对 $a_{ij}$ 求和而不带 $x_i$？" 因为那忽略了你开设了哪些位置。你需要 $a_{ij} \cdot x_i$ 才能只计算来自已选位置的覆盖。
+
+### 最优解的视觉差异
+
+**p-中位选址：** 停靠点位于密集客户群的中心（最小化平均距离）。分布更均匀。
+
+**MCLP（400 米阈值）：** 密集区域有更多停靠点，外围较少。避免在稀疏区域开设停靠点（无助于覆盖）。
+- 例子：校园西侧 → p-中位选址中有 1 个停靠点，但 MCLP 中有 2 个停靠点（密集区域，获得更多覆盖）。
+
+**p-中心选址：** 分散停靠点以确保最坏的客户不会太远。与上述两者不同。
+
+### 参数敏感性（覆盖曲线）
+
+将"恰好开设 $p$ 个站点"从 0 扫到 42，绘制覆盖与 $p$ 的关系图：
+- 凹曲线，边际收益递减
+- "肘点"，额外站点增加的价值很小
+- **硬上限：** 即使开设所有 42 个站点，也不是所有 350 个客户都能被覆盖。40 个客户离所有候选停靠点都太远 → 最大覆盖 = **310，而不是 350**。
+
+> *"通过参数扫描的敏感性分析是通用的 —— 对任何具有不确定参数的问题都有用。显示哪些参数变化最重要。"*
+
+### 技术考试提示
+
+1. **二元逻辑：** $y_{ij} \le x_i$ 读作"如果客户被分配，则位置必须开设"（蕴含）。逆否命题："如果位置关闭，则客户未被分配。"
+2. **不要在 MCLP 覆盖约束中使用 $=$** —— 那会强制每个客户被恰好覆盖一次，通常不可行。
+3. **LP 松弛 = 下界**（对最小化问题）。与整数的间隙 = 公式质量。
+4. **将目标函数除以 $m$** 不改变解，只是缩放（用于报告"平均值"）。
+
+### 公式强度直觉（考试要点）
+
+给定两个有效的公式：
+- 更明确的约束（非聚合）= 更强的下界 = 更快的整数求解。
+- 分数解的自由度更少 = 更难偏离整数解。
+
+实际影响：求解快 10–100 倍。**考试可能会问：比较两个公式，预测哪个求解更快（更强的那个获胜）。**
+</script>
+
+<script>
+function renderContent(lang) {
+  const id = (lang === 'zh') ? 'md-zh' : 'md-en';
+  const src = document.getElementById(id).textContent;
+  document.getElementById('content').innerHTML = marked.parse(src);
+  // Swap banner labels too
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
+    // Only update simple text spans (not children)
+    if (el.children.length === 0) el.textContent = txt;
+  });
+  // Re-typeset MathJax
+  setTimeout(() => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([document.getElementById('content')]);
+    }
+  }, 50);
+}
+
+// Initial render based on saved preference
+const initLang = localStorage.getItem('site_lang') || 'en';
+renderContent(initLang);
+
+// Listen for language change events from script.js
+window.addEventListener('langchange', e => renderContent(e.detail));
+</script>
+<script src="script.js"></script>
+</body>
+</html>

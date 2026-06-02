@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>公式表 | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">运营分析 — 期末复习</p>
+<nav>
+<a href="index_zh.html">🏠 仪表盘</a>
+<a href="strategy_zh.html">🎯 考试策略</a>
+<a href="week1.html">第 1 周 — 线性规划对偶</a>
+<a href="week2.html">第 2 周 — 收益管理</a>
+<a href="week3.html">第 3 周 — 报童模型</a>
+<a href="week4.html">第 4 周 — 选址</a>
+<a href="week5.html">第 5 周 — 商品组合</a>
+<a href="week6.html">第 6 周 — 定价</a>
+<a href="week7.html">第 7 周 — 网络流</a>
+<a href="week8.html">第 8 周 — 旅行商问题</a>
+<a href="formulas_zh.html" class="active">📐 公式表</a>
+<a href="templates_zh.html">🧩 题型模板</a>
+<a href="crash_zh.html">🚨 考试前夜</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>📐 公式与方法表</h1>
+
+<div class="callout info">所有主要公式集中于此。可打印出来,或在做练习题时保持打开作为参考。</div>
+
+<h2>线性规划对偶</h2>
+<table>
+<tr><th>概念</th><th>公式</th><th>说明</th></tr>
+<tr><td>弱对偶</td><td>$c^T x \le p^T b$</td><td>两者都必须可行。对于求极小的原问题,原问题值 ≥ 对偶问题值。</td></tr>
+<tr><td>强对偶</td><td>$c^T x^* = p^{*T} b$</td><td>在最优解处,两者相等。</td></tr>
+<tr><td>互补松弛</td><td>$x_j^* > 0 \Rightarrow$ 第 $j$ 个对偶约束紧</td><td>同时:约束松弛量 > 0 $\Rightarrow p_i = 0$。</td></tr>
+<tr><td>影子价格的应用</td><td>$\Delta\text{obj} \approx p_i^* \cdot \Delta b_i$</td><td>仅适用于微小变化。</td></tr>
+<tr><td>“多买 X”规则</td><td>当市场价格 < $p_i^*$ 时购买</td><td>每单位净收益 = $p_i^* - \text{成本}$。</td></tr>
+</table>
+
+<h3>原问题→对偶问题转换(求极小的原问题)</h3>
+<table>
+<tr><th>原问题约束</th><th>对偶变量</th></tr>
+<tr><td>$a_i^T x \ge b_i$</td><td>$p_i \ge 0$</td></tr>
+<tr><td>$a_i^T x \le b_i$</td><td>$p_i \le 0$</td></tr>
+<tr><td>$a_i^T x = b_i$</td><td>$p_i$ 自由</td></tr>
+<tr><th>原问题变量</th><th>对偶约束</th></tr>
+<tr><td>$x_j \ge 0$</td><td>$p^T A_j \le c_j$</td></tr>
+<tr><td>$x_j \le 0$</td><td>$p^T A_j \ge c_j$</td></tr>
+<tr><td>$x_j$ 自由</td><td>$p^T A_j = c_j$</td></tr>
+</table>
+<p><strong>对于求极大的原问题:</strong>从右往左读 — 符号反转。</p>
+
+<h2>报童模型</h2>
+<table>
+<tr><th>概念</th><th>公式</th></tr>
+<tr><td>缺货成本</td><td>$c_u = p - c$</td></tr>
+<tr><td>过剩成本</td><td>$c_o = c - s$($s$ = 残值)</td></tr>
+<tr><td>临界分位数</td><td>$\alpha = c_u/(c_u+c_o) = (p-c)/p$(当 $s=0$ 时)</td></tr>
+<tr><td>最优 $Q^*$</td><td>$Q^* = F^{-1}(\alpha)$</td></tr>
+<tr><td>均匀分布 $U[a,b]$</td><td>$Q^* = a + \alpha(b-a)$</td></tr>
+<tr><td>正态分布 $N(\mu, \sigma^2)$</td><td>$Q^* = \mu + z_\alpha \sigma$</td></tr>
+<tr><td>经验分布(样本)</td><td>$Q^* = d_{(\lceil n\alpha \rceil)}$(升序排序)</td></tr>
+<tr><td>线性回归情境化</td><td>$Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$</td></tr>
+<tr><td>决策树情境化</td><td>$Q^*(x) = $ 叶节点需求的经验 $\alpha$ 分位数</td></tr>
+</table>
+
+<h3>三角分布 Tr$[a, b, c]$</h3>
+<p><strong>概率密度函数(PDF):</strong></p>
+$$f(x) = \begin{cases} \frac{2(x-a)}{(b-a)(c-a)} & a \le x \le b \\ \frac{2(c-x)}{(c-b)(c-a)} & b < x \le c \end{cases}$$
+<p><strong>累积分布函数(CDF):</strong></p>
+$$F(x) = \begin{cases} \frac{(x-a)^2}{(b-a)(c-a)} & x \le b \\ 1 - \frac{(c-x)^2}{(c-b)(c-a)} & x > b \end{cases}$$
+<p><strong>反函数:</strong></p>
+<ul>
+<li>若 $\alpha \le F(b)$:$Q^* = a + \sqrt{\alpha(b-a)(c-a)}$</li>
+<li>若 $\alpha > F(b)$:$Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$</li>
+</ul>
+<p><strong>均值:</strong>$(a + b + c)/3$。</p>
+
+<h3>常用 $z_\alpha$ 值</h3>
+<table>
+<tr><th>$\alpha$</th><td>0.10</td><td>0.25</td><td>0.40</td><td>0.50</td><td>0.60</td><td>0.75</td><td>0.80</td><td>0.90</td><td>0.95</td></tr>
+<tr><th>$z_\alpha$</th><td>−1.28</td><td>−0.67</td><td>−0.25</td><td>0</td><td>0.25</td><td>0.67</td><td>0.84</td><td>1.28</td><td>1.65</td></tr>
+</table>
+
+<h2>收益管理</h2>
+<table>
+<tr><th>概念</th><th>公式</th></tr>
+<tr><td>预期到达量(伯努利)</td><td>$E[D_j] = (T-t+1) p_j$</td></tr>
+<tr><td>预期到达量(泊松)</td><td>$E[N] = \lambda_j (T-t)$</td></tr>
+<tr><td>容量 LP</td><td>$\max \sum r_j x_j$ s.t. $\sum x_j \le C$,$x_j \le E[D_j]$,$x \ge 0$</td></tr>
+<tr><td>投标价格</td><td>$\pi_\ell$ = 容量约束的影子价格</td></tr>
+<tr><td>单航段规则</td><td>当 $r_j \ge \pi_t(b)$ 时接受</td></tr>
+<tr><td>多航段规则</td><td>当 $r_i \ge \sum_{\ell \in S_i} \pi_\ell$ 时接受行程 $i$</td></tr>
+<tr><td>LP 值 =</td><td>预期收益的上界</td></tr>
+</table>
+
+<h2>商品组合</h2>
+<table>
+<tr><th>概念</th><th>公式</th></tr>
+<tr><td>选择概率(首选)</td><td>$P(i|S) = \sum_{k: i = \arg\max_{j \in S \cup \{0\}} u_{k,j}} \lambda_k$</td></tr>
+<tr><td>预期收益</td><td>$R(S) = \sum_{i \in S} r_i P(i|S)$</td></tr>
+<tr><td>定制化上界</td><td>$UB_1 = \sum_k \lambda_k \max_{i: u_{k,i} > u_{k,0}} r_i$</td></tr>
+<tr><td>MNL 选择概率</td><td>$P(i|S) = e^{u_i} / (e^{u_0} + \sum_{j \in S} e^{u_j})$</td></tr>
+<tr><td>LP 松弛</td><td>去掉 $x, y$ 的 0-1 约束;LP 值 ≥ IP 最优值</td></tr>
+</table>
+
+<h2>定价(线性需求)</h2>
+$$d_i(\mathbf{p}) = \alpha_i - \beta_i p_i + \sum_{j \ne i} \gamma_{i,j} p_j$$
+$$R(\mathbf{p}) = \sum_i p_i d_i(\mathbf{p})$$
+<ul>
+<li>$\gamma_{i,j} > 0$:替代品;$\gamma_{i,j} < 0$:互补品</li>
+<li>$\beta_i > 0$ 恒成立;自价格效应对收益的贡献为 $-\beta_i p_i^2$(负值)</li>
+<li>离散 IP:$x_{i,t}$ 为 0-1 变量,$\sum_t x_{i,t} = 1$,$y_{i,j,t_1,t_2}$ 需要两组联结约束</li>
+</ul>
+
+<h2>选址模型</h2>
+<table>
+<tr><th>模型</th><th>目标函数</th><th>变量</th><th>关键约束</th></tr>
+<tr><td>MCLP(最大覆盖)</td><td>$\max \sum y_j$</td><td>$x_i$,$y_j$</td><td>$y_j \le \sum_{i \in N(j)} x_i$</td></tr>
+<tr><td>p-中位</td><td>$\min \sum d_{ij} z_{ij}$</td><td>$x_j$,$z_{ij}$</td><td>$\sum_j z_{ij} = 1$,$z_{ij} \le x_j$,$\sum x_j = p$</td></tr>
+<tr><td>p-中心</td><td>$\min r$</td><td>$x_j$,$z_{ij}$,$r$</td><td>$r \ge \sum d_{ij} z_{ij}$ + p-中位约束</td></tr>
+</table>
+<p><strong>建模强度:</strong>强形式 $z_{ij} \le x_j$(逐对约束)≫ 弱形式 $\sum_j z_{ij} \le m \cdot x_i$(聚合约束)。强形式给出更紧的 LP 松弛,求解速度更快。</p>
+
+<h2>网络流</h2>
+<table>
+<tr><th>概念</th><th>公式</th></tr>
+<tr><td>流量守恒</td><td>在每个节点 $i$ 处:$\sum_{j: (j,i) \in E} x_{ji} + b_i = \sum_{j: (i,j) \in E} x_{ij}$</td></tr>
+<tr><td>供需符号</td><td>$b_i > 0$ 为供给;$b_i < 0$ 为需求;$b_i = 0$ 为转运</td></tr>
+<tr><td>平衡</td><td>$\sum_i b_i = 0$</td></tr>
+<tr><td>最短路径设置</td><td>$b_s = +1$,$b_t = -1$,其他 $= 0$</td></tr>
+<tr><td>最大可靠度</td><td>$c_{ij} = -\log r_{ij}$,然后求极小</td></tr>
+<tr><td>分段成本</td><td>低价段变量(有上限)+ 超额变量;两者均计入流量守恒</td></tr>
+<tr><td>前 K 条路径</td><td>添加 $\sum_{(i,j) \in E^*_k} x_{ij} \le L_k - 1$,然后重新求解</td></tr>
+<tr><td>全幺模性</td><td>纯网络流 LP ⇒ 最优解为整数(无需 IP)</td></tr>
+</table>
+
+<h2>旅行商问题(TSP)</h2>
+<table>
+<tr><th>约束</th><th>公式</th></tr>
+<tr><td>出度</td><td>$\sum_{j \ne i} x_{ij} = 1 \quad \forall i$</td></tr>
+<tr><td>入度</td><td>$\sum_{j \ne i} x_{ji} = 1 \quad \forall i$</td></tr>
+<tr><td>子集 $S$ 的子环消除约束(SEC)</td><td>$\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$</td></tr>
+<tr><td>割形式的 SEC</td><td>$\sum_{i \in S, j \notin S} x_{ij} \ge 1$</td></tr>
+<tr><td>曼哈顿距离</td><td>$d_{ij} = |u_i - u_j| + |v_i - v_j|$</td></tr>
+<tr><td>惰性回调</td><td>在 MIPSOL 处检测子环,动态添加 SEC</td></tr>
+</table>
+
+<h2>通用附加约束模式</h2>
+<table>
+<tr><th>语言描述</th><th>约束</th></tr>
+<tr><td>若 $A$ 则 $B$</td><td>$x_A \le x_B$</td></tr>
+<tr><td>若 $A$ 则 $\{B_1,B_2,B_3\}$ 中至少一个</td><td>$x_A \le x_{B_1}+x_{B_2}+x_{B_3}$</td></tr>
+<tr><td>若 $A$ 且 $B$ 则 $C$</td><td>$x_A + x_B - 1 \le x_C$</td></tr>
+<tr><td>若 $A$ 且 $B$ 则 $C$ 且 $D$</td><td>$x_A + x_B - 1 \le x_C$ 且 $x_A + x_B - 1 \le x_D$</td></tr>
+<tr><td>若 $A$ 则非 $B$</td><td>$x_A + x_B \le 1$</td></tr>
+<tr><td>互斥</td><td>$x_A + x_B \le 1$</td></tr>
+<tr><td>至少选 $m$ 个,至多选 $M$ 个</td><td>$m \le \sum x_i \le M$</td></tr>
+<tr><td>恰好选 $p$ 个</td><td>$\sum x_i = p$</td></tr>
+<tr><td>容量限制(每个设施 $K$ 单位)</td><td>$\sum_i z_{ij} \le K \cdot x_j$</td></tr>
+<tr><td>条件概率 ≥ 20%</td><td>$\sum_k \lambda_k y_{k,i} \ge 0.20 \cdot x_i$</td></tr>
+</table>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

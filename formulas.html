@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Formula Sheet | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Mgmt</a>
+<a href="week3.html">Week 3 — Newsvendor</a>
+<a href="week4.html">Week 4 — Location</a>
+<a href="week5.html">Week 5 — Assortment</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — TSP</a>
+<a href="formulas.html" class="active">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+
+<main>
+<section>
+<h1>📐 Formula &amp; Method Sheet</h1>
+
+<div class="callout info">All major formulas in one place. Print this or keep open as a reference while doing practice problems.</div>
+
+<h2>LP Duality</h2>
+<table>
+<tr><th>Concept</th><th>Formula</th><th>Notes</th></tr>
+<tr><td>Weak duality</td><td>$c^T x \le p^T b$</td><td>Both must be feasible. For min primal, primal ≥ dual.</td></tr>
+<tr><td>Strong duality</td><td>$c^T x^* = p^{*T} b$</td><td>At optimum, equal.</td></tr>
+<tr><td>Comp. slackness</td><td>$x_j^* > 0 \Rightarrow$ dual constraint $j$ tight</td><td>And: constraint slack > 0 $\Rightarrow p_i = 0$.</td></tr>
+<tr><td>Shadow price use</td><td>$\Delta\text{obj} \approx p_i^* \cdot \Delta b_i$</td><td>For small changes only.</td></tr>
+<tr><td>"Buy more X" rule</td><td>BUY iff market price < $p_i^*$</td><td>Net gain per unit = $p_i^* - \text{cost}$.</td></tr>
+</table>
+
+<h3>Primal→Dual Conversion (for MIN primal)</h3>
+<table>
+<tr><th>Primal constraint</th><th>Dual variable</th></tr>
+<tr><td>$a_i^T x \ge b_i$</td><td>$p_i \ge 0$</td></tr>
+<tr><td>$a_i^T x \le b_i$</td><td>$p_i \le 0$</td></tr>
+<tr><td>$a_i^T x = b_i$</td><td>$p_i$ free</td></tr>
+<tr><th>Primal variable</th><th>Dual constraint</th></tr>
+<tr><td>$x_j \ge 0$</td><td>$p^T A_j \le c_j$</td></tr>
+<tr><td>$x_j \le 0$</td><td>$p^T A_j \ge c_j$</td></tr>
+<tr><td>$x_j$ free</td><td>$p^T A_j = c_j$</td></tr>
+</table>
+<p><strong>For MAX primal:</strong> Read right-to-left — signs flip.</p>
+
+<h2>Newsvendor</h2>
+<table>
+<tr><th>Concept</th><th>Formula</th></tr>
+<tr><td>Underage cost</td><td>$c_u = p - c$</td></tr>
+<tr><td>Overage cost</td><td>$c_o = c - s$ ($s$ = salvage)</td></tr>
+<tr><td>Critical fractile</td><td>$\alpha = c_u/(c_u+c_o) = (p-c)/p$ (when $s=0$)</td></tr>
+<tr><td>Optimal $Q^*$</td><td>$Q^* = F^{-1}(\alpha)$</td></tr>
+<tr><td>Uniform $U[a,b]$</td><td>$Q^* = a + \alpha(b-a)$</td></tr>
+<tr><td>Normal $N(\mu, \sigma^2)$</td><td>$Q^* = \mu + z_\alpha \sigma$</td></tr>
+<tr><td>Empirical (sample)</td><td>$Q^* = d_{(\lceil n\alpha \rceil)}$ (sort ascending)</td></tr>
+<tr><td>Linear reg. contextual</td><td>$Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$</td></tr>
+<tr><td>Tree contextual</td><td>$Q^*(x) = $ empirical $\alpha$-quantile of leaf demands</td></tr>
+</table>
+
+<h3>Triangular Distribution Tr$[a, b, c]$</h3>
+<p><strong>PDF:</strong></p>
+$$f(x) = \begin{cases} \frac{2(x-a)}{(b-a)(c-a)} & a \le x \le b \\ \frac{2(c-x)}{(c-b)(c-a)} & b < x \le c \end{cases}$$
+<p><strong>CDF:</strong></p>
+$$F(x) = \begin{cases} \frac{(x-a)^2}{(b-a)(c-a)} & x \le b \\ 1 - \frac{(c-x)^2}{(c-b)(c-a)} & x > b \end{cases}$$
+<p><strong>Inverse:</strong></p>
+<ul>
+<li>If $\alpha \le F(b)$: $Q^* = a + \sqrt{\alpha(b-a)(c-a)}$</li>
+<li>If $\alpha > F(b)$: $Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$</li>
+</ul>
+<p><strong>Mean:</strong> $(a + b + c)/3$.</p>
+
+<h3>Common $z_\alpha$ values</h3>
+<table>
+<tr><th>$\alpha$</th><td>0.10</td><td>0.25</td><td>0.40</td><td>0.50</td><td>0.60</td><td>0.75</td><td>0.80</td><td>0.90</td><td>0.95</td></tr>
+<tr><th>$z_\alpha$</th><td>−1.28</td><td>−0.67</td><td>−0.25</td><td>0</td><td>0.25</td><td>0.67</td><td>0.84</td><td>1.28</td><td>1.65</td></tr>
+</table>
+
+<h2>Revenue Management</h2>
+<table>
+<tr><th>Concept</th><th>Formula</th></tr>
+<tr><td>Expected arrivals (Bernoulli)</td><td>$E[D_j] = (T-t+1) p_j$</td></tr>
+<tr><td>Expected arrivals (Poisson)</td><td>$E[N] = \lambda_j (T-t)$</td></tr>
+<tr><td>Capacity LP</td><td>$\max \sum r_j x_j$ s.t. $\sum x_j \le C$, $x_j \le E[D_j]$, $x \ge 0$</td></tr>
+<tr><td>Bid price</td><td>$\pi_\ell$ = shadow price of capacity constraint</td></tr>
+<tr><td>Single-leg rule</td><td>Accept iff $r_j \ge \pi_t(b)$</td></tr>
+<tr><td>Multi-leg rule</td><td>Accept itinerary $i$ iff $r_i \ge \sum_{\ell \in S_i} \pi_\ell$</td></tr>
+<tr><td>LP value =</td><td>Upper bound on expected revenue</td></tr>
+</table>
+
+<h2>Assortment</h2>
+<table>
+<tr><th>Concept</th><th>Formula</th></tr>
+<tr><td>Choice probability (first-choice)</td><td>$P(i|S) = \sum_{k: i = \arg\max_{j \in S \cup \{0\}} u_{k,j}} \lambda_k$</td></tr>
+<tr><td>Expected revenue</td><td>$R(S) = \sum_{i \in S} r_i P(i|S)$</td></tr>
+<tr><td>Customized upper bound</td><td>$UB_1 = \sum_k \lambda_k \max_{i: u_{k,i} > u_{k,0}} r_i$</td></tr>
+<tr><td>MNL choice prob</td><td>$P(i|S) = e^{u_i} / (e^{u_0} + \sum_{j \in S} e^{u_j})$</td></tr>
+<tr><td>LP relaxation</td><td>Drop binary on $x, y$; LP value ≥ IP optimum</td></tr>
+</table>
+
+<h2>Pricing (Linear Demand)</h2>
+$$d_i(\mathbf{p}) = \alpha_i - \beta_i p_i + \sum_{j \ne i} \gamma_{i,j} p_j$$
+$$R(\mathbf{p}) = \sum_i p_i d_i(\mathbf{p})$$
+<ul>
+<li>$\gamma_{i,j} > 0$: substitute (替代品); $\gamma_{i,j} < 0$: complement (互补品)</li>
+<li>$\beta_i > 0$ always; own-price effect contributes $-\beta_i p_i^2$ (NEGATIVE) to revenue</li>
+<li>Discrete IP: $x_{i,t}$ binary, $\sum_t x_{i,t} = 1$, $y_{i,j,t_1,t_2}$ with BOTH linking constraints</li>
+</ul>
+
+<h2>Location Models</h2>
+<table>
+<tr><th>Model</th><th>Objective</th><th>Variables</th><th>Key Constraint</th></tr>
+<tr><td>MCLP</td><td>$\max \sum y_j$</td><td>$x_i$, $y_j$</td><td>$y_j \le \sum_{i \in N(j)} x_i$</td></tr>
+<tr><td>p-median</td><td>$\min \sum d_{ij} z_{ij}$</td><td>$x_j$, $z_{ij}$</td><td>$\sum_j z_{ij} = 1$, $z_{ij} \le x_j$, $\sum x_j = p$</td></tr>
+<tr><td>p-center</td><td>$\min r$</td><td>$x_j$, $z_{ij}$, $r$</td><td>$r \ge \sum d_{ij} z_{ij}$ + p-median constraints</td></tr>
+</table>
+<p><strong>Formulation strength:</strong> Strong $z_{ij} \le x_j$ (per pair) ≫ Weak $\sum_j z_{ij} \le m \cdot x_i$ (aggregated). Strong gives tighter LP, much faster.</p>
+
+<h2>Network Flow</h2>
+<table>
+<tr><th>Concept</th><th>Formula</th></tr>
+<tr><td>Flow conservation</td><td>$\sum_{j: (j,i) \in E} x_{ji} + b_i = \sum_{j: (i,j) \in E} x_{ij}$ at each node $i$</td></tr>
+<tr><td>Supply/demand sign</td><td>$b_i > 0$ supply; $b_i < 0$ demand; $b_i = 0$ transshipment</td></tr>
+<tr><td>Balanced</td><td>$\sum_i b_i = 0$</td></tr>
+<tr><td>Shortest path setup</td><td>$b_s = +1$, $b_t = -1$, others $= 0$</td></tr>
+<tr><td>Max reliability</td><td>$c_{ij} = -\log r_{ij}$, then minimize</td></tr>
+<tr><td>Piecewise cost</td><td>Cheap-tier var (capped) + excess var; sum both in conservation</td></tr>
+<tr><td>Top-K paths</td><td>Add $\sum_{(i,j) \in E^*_k} x_{ij} \le L_k - 1$, re-solve</td></tr>
+<tr><td>Total unimodularity</td><td>Pure network flow LP ⇒ integer optimum (no IP needed)</td></tr>
+</table>
+
+<h2>TSP</h2>
+<table>
+<tr><th>Constraint</th><th>Formula</th></tr>
+<tr><td>Out-degree</td><td>$\sum_{j \ne i} x_{ij} = 1 \quad \forall i$</td></tr>
+<tr><td>In-degree</td><td>$\sum_{j \ne i} x_{ji} = 1 \quad \forall i$</td></tr>
+<tr><td>SEC for subset $S$</td><td>$\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$</td></tr>
+<tr><td>Cut form SEC</td><td>$\sum_{i \in S, j \notin S} x_{ij} \ge 1$</td></tr>
+<tr><td>Manhattan distance</td><td>$d_{ij} = |u_i - u_j| + |v_i - v_j|$</td></tr>
+<tr><td>Lazy callback</td><td>Detect subtours at MIPSOL, add SEC dynamically</td></tr>
+</table>
+
+<h2>Universal Side-Constraint Patterns</h2>
+<table>
+<tr><th>English</th><th>Constraint</th></tr>
+<tr><td>If $A$ then $B$</td><td>$x_A \le x_B$</td></tr>
+<tr><td>If $A$ then at least one of $\{B_1,B_2,B_3\}$</td><td>$x_A \le x_{B_1}+x_{B_2}+x_{B_3}$</td></tr>
+<tr><td>If $A$ AND $B$ then $C$</td><td>$x_A + x_B - 1 \le x_C$</td></tr>
+<tr><td>If $A$ AND $B$ then $C$ AND $D$</td><td>$x_A + x_B - 1 \le x_C$ AND $x_A + x_B - 1 \le x_D$</td></tr>
+<tr><td>If $A$ then NOT $B$</td><td>$x_A + x_B \le 1$</td></tr>
+<tr><td>Mutually exclusive</td><td>$x_A + x_B \le 1$</td></tr>
+<tr><td>Choose at least $m$, at most $M$</td><td>$m \le \sum x_i \le M$</td></tr>
+<tr><td>Exactly $p$</td><td>$\sum x_i = p$</td></tr>
+<tr><td>Capacity ($K$ units per facility)</td><td>$\sum_i z_{ij} \le K \cdot x_j$</td></tr>
+<tr><td>Conditional probability ≥ 20%</td><td>$\sum_k \lambda_k y_{k,i} \ge 0.20 \cdot x_i$</td></tr>
+</table>
+
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

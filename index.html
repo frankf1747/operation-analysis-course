@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MGMTMSA 408 — Final Exam Review</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <h1>MGMTMSA 408</h1>
+  <p class="subtitle">Operations Analytics — Final Review</p>
+  <nav>
+    <a href="index.html" class="active">🏠 Dashboard</a>
+    <a href="strategy.html">🎯 Exam Strategy</a>
+    <a href="week1.html">Week 1 — LP Duality</a>
+    <a href="week2.html">Week 2 — Revenue Mgmt</a>
+    <a href="week3.html">Week 3 — Newsvendor</a>
+    <a href="week4.html">Week 4 — Location</a>
+    <a href="week5.html">Week 5 — Assortment</a>
+    <a href="week6.html">Week 6 — Pricing</a>
+    <a href="week7.html">Week 7 — Network Flows</a>
+    <a href="week8.html">Week 8 — TSP</a>
+    <a href="formulas.html">📐 Formula Sheet</a>
+    <a href="templates.html">🧩 Problem Templates</a>
+    <a href="crash.html">🚨 Night Before Exam</a>
+  </nav>
+</aside>
+
+<main>
+
+<section>
+<h1>🏠 Study Dashboard</h1>
+
+<div class="callout exam">
+<strong>🎙️ CONFIRMED FROM PROF MISIC'S FINAL LECTURE (5/27/2026):</strong>
+<ul style="margin-top:6px">
+<li><strong>Exam scope:</strong> <span class="hl">Weeks 1–8 only</span>. Prof's exact words: <em>"Everything from LP duality to traveling salesman, all of that can show up in the exam."</em></li>
+<li><strong>Confirmed EXCLUDED:</strong> Column Generation (W9), Matching (W10). Prof: <em>"I will not test you on column generation."</em></li>
+<li><strong>Exam structure:</strong> <span class="hl">~6 questions with multiple parts</span>. Not all 8 topics will be covered — some may be OMITTED.</li>
+<li><strong>Calculator:</strong> Non-graphing scientific calculator REQUIRED (~$15 on Amazon). Graphing NOT allowed.</li>
+<li><strong>TSP getSubtours code reading is GUARANTEED:</strong> Prof confirmed <em>"I will give you this code... you should be able to read it and tell me what the output is."</em></li>
+</ul>
+</div>
+
+<div class="callout info">
+<strong>Course:</strong> MGMTMSA 408 — Operations Analytics (Prof. Velibor Misic, UCLA Anderson)<br>
+<strong>Format:</strong> Closed book, closed notes.<br>
+<strong>Recommended workflow:</strong> Open one week's HTML page on the LEFT side of your screen, and the lecture PDF (link is shown at top of each week page) on the RIGHT. Each week page now includes a "🎙️ Lecture Transcript Insights" section with verbal explanations, student Q&A, and warnings the prof said in class but didn't put in the slides.
+</div>
+
+<h2>How to Use This Site (~1.5 hours per week)</h2>
+<ol>
+<li><strong>Click a week in the sidebar</strong> — each page has a deep, slide-by-slide walkthrough with notebook code explained.</li>
+<li><strong>Read top-to-bottom.</strong> Sections start with intuition (Big Picture), then build math, then walk through the notebook, then practice questions.</li>
+<li><strong>Pause at every formula.</strong> Re-derive it. Plug in numbers from the worked examples.</li>
+<li><strong>Do the Mini Practice</strong> at the end of each week BEFORE looking at the answer.</li>
+<li><strong>Review the Formula Sheet and Crash Review</strong> on Day 7 (night before exam).</li>
+</ol>
+
+<h2>Prof's Exam Prep Quote (5/27)</h2>
+<div class="callout key">
+<em>"If you go through the practice problems on your own, you should be fine in the exam."</em><br>
+<em>"If you did the homework on your own (without copying to ChatGPT at 11pm), you will be fine with the exam."</em>
+</div>
+
+<h2>Priority Ranking</h2>
+<table class="priority">
+<tr><th>Priority</th><th>Topic</th><th>Why</th></tr>
+<tr class="high"><td>🔴 HIGH</td><td>LP Duality (W1)</td><td>Foundational. Shadow prices reappear in RM, location, assortment, network. 2 practice problems.</td></tr>
+<tr class="high"><td>🔴 HIGH</td><td>Newsvendor (W3)</td><td>4 distinct flavors tested: uniform, triangular, normal, regression tree, linear regression.</td></tr>
+<tr class="high"><td>🔴 HIGH</td><td>Assortment (W5)</td><td>Multi-part practice problem (10 sub-parts!). Choice probs + IP + 5 side constraints + 2 upper-bound methods.</td></tr>
+<tr class="high"><td>🔴 HIGH</td><td>Network Flows (W7)</td><td>Big LP problem (production + transportation with EXPLICIT numbers, no Σ notation). Plus max-reliability via logs.</td></tr>
+<tr class="high"><td>🔴 HIGH</td><td>TSP (W8)</td><td>Trace getSubtours code line-by-line. Write SECs added by callback. Modify formulation.</td></tr>
+<tr class="med"><td>🟡 MED</td><td>Location (W4)</td><td>Formulate MCLP/p-median/p-center. Add side constraints. Compare strong vs weak formulations.</td></tr>
+<tr class="med"><td>🟡 MED</td><td>Revenue Management (W2)</td><td>Formulate capacity LP. Apply bid-price rule. Validate against LP upper bound.</td></tr>
+<tr class="med"><td>🟡 MED</td><td>Pricing (W6)</td><td>Compute demand/revenue. Identify missing constraints in partial IP.</td></tr>
+<tr class="low"><td>⚪ NOT TESTED</td><td>Column Generation (W9), Matching (W10)</td><td>Confirmed excluded.</td></tr>
+</table>
+
+<h2>7-Day Study Plan</h2>
+<table>
+<tr><th>Day</th><th>Focus</th><th>Action</th></tr>
+<tr><td>1</td><td>Week 1 + Week 3</td><td>LP Duality + Newsvendor. Solve LP Duality-I (toys), Newsvendor-I (coffee).</td></tr>
+<tr><td>2</td><td>Week 5 + Week 7</td><td>Assortment + Network Flows. Solve Assortment-I, Network Flows-I (Psyche).</td></tr>
+<tr><td>3</td><td>Week 8 + Week 4</td><td>TSP + Location. Hand-trace getSubtours. Practice TSP-I.</td></tr>
+<tr><td>4</td><td>Week 2 + Week 6</td><td>Revenue Management + Pricing. Re-derive bid-price logic. Pricing missing-constraints.</td></tr>
+<tr><td>5</td><td>Full practice exam</td><td>All practice problems closed-book, timed. Mark every question.</td></tr>
+<tr><td>6</td><td>Weak topics</td><td>Re-read worst-scoring weeks. Re-do those problems.</td></tr>
+<tr><td>7</td><td>Crash review</td><td>"Night Before Exam" page + Formula Sheet. Sleep early.</td></tr>
+</table>
+
+<h2>Must-Know Mastery Checklist</h2>
+<ul class="checklist">
+<li><label><input type="checkbox"> LP duality: primal↔dual conversion (constraint type ↔ variable sign)</label></li>
+<li><label><input type="checkbox"> Weak duality + complementary slackness</label></li>
+<li><label><input type="checkbox"> Shadow price decision: "buy more resource at $Y?"</label></li>
+<li><label><input type="checkbox"> Capacity control LP for revenue management</label></li>
+<li><label><input type="checkbox"> Bid-price rule: accept iff fare ≥ sum of shadow prices of used resources</label></li>
+<li><label><input type="checkbox"> Newsvendor critical fractile $F(Q^*) = c_u/(c_u+c_o)$</label></li>
+<li><label><input type="checkbox"> CDF inversion for uniform / triangular / normal</label></li>
+<li><label><input type="checkbox"> Empirical quantile from sorted data (⌈nα⌉-th value)</label></li>
+<li><label><input type="checkbox"> Contextual newsvendor: regression tree leaf quantile</label></li>
+<li><label><input type="checkbox"> Linear regression contextual: $\hat{\mu}(x) + z_\alpha \hat{\sigma}$</label></li>
+<li><label><input type="checkbox"> MCLP, p-median, p-center formulations</label></li>
+<li><label><input type="checkbox"> Strong vs weak constraint: $z_{ij} \le x_j$ beats $\sum z \le m \cdot x$</label></li>
+<li><label><input type="checkbox"> First-choice (max-utility) assortment choice probability</label></li>
+<li><label><input type="checkbox"> Assortment IP with $x_i, y_{k,i}$ + max-utility constraint</label></li>
+<li><label><input type="checkbox"> Two upper-bound methods (customized, LP relaxation)</label></li>
+<li><label><input type="checkbox"> Linear demand model: $d_i = \alpha_i - \beta_i p_i + \sum \gamma_{ij} p_j$</label></li>
+<li><label><input type="checkbox"> Pricing IP: one price per product + both linking directions</label></li>
+<li><label><input type="checkbox"> Flow conservation at every node (in = out for transshipment)</label></li>
+<li><label><input type="checkbox"> Production + transportation LP with explicit numbers</label></li>
+<li><label><input type="checkbox"> Piecewise cost: cheap-tier variable capped + excess variable</label></li>
+<li><label><input type="checkbox"> Max reliability via log → shortest path</label></li>
+<li><label><input type="checkbox"> Side constraints on paths: "if A→C AND C→E then J→L" → $x_{AC}+x_{CE}-1 \le x_{JL}$</label></li>
+<li><label><input type="checkbox"> TSP degree=1 constraints + SECs</label></li>
+<li><label><input type="checkbox"> Trace getSubtours line-by-line</label></li>
+<li><label><input type="checkbox"> Write SECs added by lazy callback</label></li>
+</ul>
+
+<h2>What to Memorize (vs Understand vs Practice)</h2>
+<div class="callout warn">
+<strong>Memorize:</strong>
+<ul>
+<li>Primal→Dual conversion table</li>
+<li>Newsvendor critical fractile formula</li>
+<li>Triangular distribution CDF and inverse (likely provided but be safe)</li>
+<li>Flow conservation equation</li>
+<li>TSP degree + SEC formulas</li>
+<li>Bid-price decision rule</li>
+<li>Side-constraint patterns (if A then B; at most K; etc.)</li>
+</ul>
+</div>
+
+<div class="callout key">
+<strong>Understand (don't memorize):</strong>
+<ul>
+<li>WHY degree constraints alone fail in TSP (subtours)</li>
+<li>WHY log-transform converts max-reliability to shortest path</li>
+<li>WHY customized bound > achievable revenue (heterogeneous segments)</li>
+<li>WHY LP relaxation gives upper bound (larger feasible set)</li>
+<li>WHY strong constraints give faster solves (tighter LP bound)</li>
+</ul>
+</div>
+
+<div class="callout info">
+<strong>Practice (until automatic):</strong>
+<ul>
+<li>Write LP formulations from word problems (variables → objective → constraints)</li>
+<li>Trace Python code by hand (getSubtours, regression tree leaf lookup)</li>
+<li>Integrate piecewise densities for expected profit</li>
+<li>Identify problem type from text (TSP vs shortest path vs MCNF vs p-median)</li>
+</ul>
+</div>
+
+</section>
+
+</main>
+<script src="script.js"></script>
+</body>
+</html>

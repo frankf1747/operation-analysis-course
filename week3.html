@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 — Newsvendor Problem | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Management</a>
+<a href="week3.html" class="active">Week 3 — Newsvendor Problem</a>
+<a href="week4.html">Week 4 — Location Models</a>
+<a href="week5.html">Week 5 — Assortment Optimization</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html">Week 8 — Traveling Salesman</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+<main>
+<div class="week-banner">
+<div class="week-meta">
+<span class="week-num" data-en="Week 3" data-zh="第3周">Week 3</span>
+<h1><span data-en="Newsvendor Problem" data-zh="报童问题">Newsvendor Problem</span> <span class="cn">报童问题</span></h1>
+<p class="topics" data-en="Critical fractile, CDF inversion (uniform/triangular/normal), empirical & contextual newsvendor" data-zh="Critical fractile, CDF inversion (uniform/triangular/normal), empirical & contextual newsvendor">Critical fractile, CDF inversion (uniform/triangular/normal), empirical & contextual newsvendor</p>
+</div>
+<div class="open-pdf">
+<strong><span data-en="📖 Open lecture PDF alongside:" data-zh="📖 同时打开讲义PDF：">📖 Open lecture PDF alongside:</span></strong><br>
+<code>../3/Lecture3_InventoryOptimization_v2.pdf</code>
+</div>
+</div>
+<article id="content" class="markdown-body"></article>
+</main>
+
+<script id="md-en" type="text/markdown"># Week 3 — Newsvendor Problem 报童问题
+
+## 0. Big Picture
+
+A newsvendor buys today's newspaper at cost $c$ and sells at price $p$. **Order too few → lost sales. Order too many → unsold (worthless at end of day).** This perishable-inventory tradeoff applies to bakeries, fashion, airlines (overbooking), seasonal items, and any perishable good.
+
+## 1. Mathematical Setup
+
+- Random demand $D$ with distribution $F$
+- Order quantity $Q$ (chosen BEFORE $D$ observed)
+- Cost $c$, selling price $p$, salvage value $s$ (often 0)
+
+**Profit for one realization:**
+$$\pi(Q,D) = p \min(Q,D) + s(Q-D)^+ - cQ$$
+
+When $s = 0$: $\pi = p \min(Q,D) - cQ$.
+
+## 2. Two Equivalent Formulations
+
+### Profit-based
+$$\max_Q E[p \min(Q,D) - cQ]$$
+
+### Cost-based (缺货成本 & 过剩成本)
+$$\min_Q E[c_u(D-Q)^+ + c_o(Q-D)^+]$$
+- $c_u = p - c$ (underage — opportunity cost per unmet unit)
+- $c_o = c - s$ (overage — net cost per unsold unit)
+
+Why equivalent: profit $= (p-c) E[D] - E[c_u(D-Q)^+ + c_o(Q-D)^+]$. First term constant in $Q$.
+
+## 3. Critical Fractile — Derivation 临界分位数
+
+### Marginal Analysis
+Going from $Q$ to $Q+1$:
+- If $D > Q$: gain $c_u$ (probability $P(D > Q)$)
+- If $D \le Q$: lose $c_o$ (probability $P(D \le Q)$)
+
+Set marginal benefit = 0:
+$$c_u(1 - F(Q^*)) = c_o F(Q^*)$$
+$$F(Q^*) = \frac{c_u}{c_u + c_o}$$
+
+**Equivalent profit-based form (when $s = 0$):** $F(Q^*) = (p-c)/p$.
+
+### Calculus Derivation
+$G(Q) = pE[\min(Q,D)] - cQ$. Derivative:
+$$G'(Q) = p(1 - F(Q)) - c = 0 \Rightarrow F(Q^*) = \frac{p-c}{p}$$
+
+**Intuition:** Want stockout probability = $c/p$. Thin margins (high $c/p$) → stock less.
+
+## 4. Distributions — CDF Inversion
+
+### Uniform $U[a,b]$
+$F(x) = (x-a)/(b-a)$, $Q^* = a + \alpha(b-a)$.
+
+**Example:** $U[20,80]$, $p=12, c=4, s=2$ → $c_u=8, c_o=2, \alpha=0.8$. $Q^* = 20 + 0.8(60) = 68$.
+
+### Triangular Tr$[a, b, c]$ (low, mode, high)
+**PDF:**
+$$f(x) = \begin{cases} \frac{2(x-a)}{(b-a)(c-a)} & a \le x \le b \\ \frac{2(c-x)}{(c-b)(c-a)} & b < x \le c \end{cases}$$
+
+**CDF:**
+$$F(x) = \begin{cases} \frac{(x-a)^2}{(b-a)(c-a)} & x \le b \\ 1 - \frac{(c-x)^2}{(c-b)(c-a)} & x > b \end{cases}$$
+
+**Inverse:**
+- If $\alpha \le F(b)$: $Q^* = a + \sqrt{\alpha(b-a)(c-a)}$
+- If $\alpha > F(b)$: $Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$
+
+**Example:** Tr[100, 150, 300], $p=4, c=1, s=0 \Rightarrow \alpha = 0.75$. $F(150) = 50/200 = 0.25$. Since $0.75 > 0.25$, use upper branch:
+$$Q^* = 300 - \sqrt{0.25 \cdot 150 \cdot 200} = 300 - 86.6 = 213$$
+
+### Normal $N(\mu, \sigma^2)$
+$Q^* = \mu + z_\alpha \cdot \sigma$. $z_\alpha < 0$ when $\alpha < 0.5$.
+
+Standard $z$ values: $z_{0.5}=0, z_{0.75}=0.674, z_{0.9}=1.282, z_{0.95}=1.645$.
+
+**Example:** $N(500, 100^2), p=100, c=60, \alpha=0.4, z_{0.4}=-0.253$. $Q^* = 500 - 25 = 475$.
+
+### Exponential Exp($\lambda$)
+$F(x) = 1 - e^{-\lambda x}$, $Q^* = -\ln(1-\alpha)/\lambda$.
+
+## 5. Basic Newsvendor Notebook
+
+**Cell 1-2:** Simulate 1000 demands from $N(500, 100^2)$.
+
+**Cell 3:** For each $Q = 1, 2, ..., 999$:
+```python
+profits = [p*min(Q,d) - c*Q for d in demand_data]
+expected_profit.append(np.mean(profits))
+```
+
+**Cell 6-7:** Plot expected_profit vs Q → concave inverted parabola.
+
+**Cell 8-10:**
+```python
+optimal_Q = expected_profit.argmax()
+empirical_stockout = sum(d > optimal_Q for d in demand_data) / 1000
+```
+
+**Cell 11:** Verify against theory: `1 - stats.norm.cdf(optimal_Q, mu, sigma)`.
+
+**Cell 18:** Skip grid search — directly use:
+```python
+nv_quantile = (p-c)/p
+optimal_Q = np.quantile(demand_data, nv_quantile)
+```
+
+## 6. Sample-Average (Empirical) Newsvendor
+
+Given historical demands $d_1, \ldots, d_n$:
+1. Compute $\alpha = (p-c)/p$
+2. Sort demands
+3. $Q^* = d_{(\lceil n\alpha \rceil)}$ (the $\lceil n\alpha \rceil$-th smallest)
+
+**Example:** 10 demands [45,52,48,61,55,49,58,51,46,60]. $\alpha=0.8$, $\lceil 8 \rceil = 8$. Sorted: [45,46,48,49,51,52,55,58,60,61]. $Q^* = 58$.
+
+## 7. Contextual Newsvendor — Big Picture 背景变量
+
+Demand depends on features $X$ (weather, day, location). Want $Q^*(X)$ — order quantity as function of context.
+
+Two approaches:
+- **Regression tree** (non-parametric, splits feature space into leaves)
+- **Linear regression** (parametric, assumes $D|X \sim$ Normal)
+
+## 8. Regression Tree Approach
+
+1. Fit tree on training data $(x_i, d_i)$.
+2. For each leaf $\ell$: collect demands of samples in $\ell$, compute $\alpha$-quantile.
+3. New $x$ → drop down tree to find leaf → use that leaf's $Q^*$.
+
+## 9. Linear Regression Approach
+
+Assume $D | X \sim N(\beta_0 + \beta_1 X_1 + \ldots + \beta_k X_k, \sigma^2)$.
+
+1. Fit linear regression → get $\hat\beta$'s and $\hat\sigma$.
+2. For new $x$: $\hat\mu(x) = \hat\beta_0 + \sum \hat\beta_i x_i$
+3. $Q^*(x) = \hat\mu(x) + z_\alpha \cdot \hat\sigma$
+
+**Example:** $\hat\mu = 50 + 2T - 15W$, $\hat\sigma = 20$, $\alpha = 0.4$. Tomorrow $T=85, W=0$ → $\hat\mu = 220$. $z_{0.4} = -0.253$. $Q^* = 220 - 5 = 215$.
+
+## 10. Orange Juice Notebook — Full Walkthrough
+
+**Cell 2-3:** Load OJ data with demographic features (income, education, age, etc.) and demand.
+
+**Cell 5:** Train-test split 50/50.
+
+**Cell 7:** Fit `DecisionTreeRegressor(max_depth=2)` → 3-4 leaves.
+
+**Cell 21-25:**
+```python
+p, c = 3.00, 2.10
+nv_quantile = (p-c)/p  # = 0.30
+leaves = [2, 3, 5, 6]
+leaf_to_quantile = np.zeros(tree.node_count)
+for leaf in leaves:
+    demands_in_leaf = y_train[oj_tree.apply(X_train) == leaf]
+    leaf_to_quantile[leaf] = np.quantile(demands_in_leaf, nv_quantile)
+```
+
+**Cell 29-30:** Out-of-sample evaluation:
+```python
+test_leaves = oj_tree.apply(X_test)
+test_orders = leaf_to_quantile[test_leaves]
+test_profit = p * np.minimum(test_orders, y_test) - c * test_orders
+# Contextual avg ≈ $4028/week
+```
+
+**Cell 31-32:** Non-contextual baseline (single Q for all stores) ≈ $3932/week. Contextual gain ≈ 2.4%.
+
+## 11. Expected Profit Calculation
+
+$$E[\pi(Q^*, D)] = pE[\min(Q^*, D)] - cQ^*$$
+
+Where:
+$$E[\min(Q^*, D)] = \int_0^{Q^*} x f(x) dx + Q^* [1 - F(Q^*)]$$
+
+Alternative: $G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$.
+
+**Worked example (coffee, uniform):** $Q^* = 68$, $E[\pi^*] = $352. Full profit:
+$$\pi^* = pE[D] - E[\text{losses}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
+
+## 12. Step-by-Step Templates
+
+### (a) Known distribution
+1. Compute $\alpha = (p-c)/p$ or $c_u/(c_u+c_o)$
+2. Invert CDF: $Q^* = F^{-1}(\alpha)$
+3. (Optional) Compute expected profit
+
+### (b) Sample data
+1. Compute $\alpha$
+2. Sort demands
+3. $Q^* = $ ⌈$n\alpha$⌉-th smallest
+
+### (c) Regression tree
+1. Drop $x$ down tree to find leaf $\ell$
+2. $Q^*(x) = $ empirical $\alpha$-quantile of demands in $\ell$
+
+### (d) Linear regression
+1. Fit linear model, get $\hat\beta, \hat\sigma$
+2. Predicted mean $\hat\mu(x)$
+3. $Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$
+
+## 13. Common Mistakes ⚠️
+
+1. **Wrong direction of fractile.** $F(Q^*) = \alpha$ (CDF), NOT $P(D > Q^*) = \alpha$.
+2. **Forgetting salvage.** If $s > 0$: $c_o = c - s$ (not just $c$).
+3. **Wrong root of quadratic.** Triangular: $Q^* = 300 \pm 86.6$ — pick root in $[a, c]$, i.e. 213.
+4. **Using $\lfloor n\alpha \rfloor$ instead of ⌈$n\alpha$⌉** in empirical quantile.
+5. **Forgetting $z_\alpha < 0$ for $\alpha < 0.5$.** Order BELOW mean when underage is cheap.
+6. **Using mean as $Q^*$.** Only correct when $\alpha = 0.5$.
+7. **Tree overfitting.** Use max_depth ≤ 4.
+8. **Wrong CDF branch for triangular.** Check $\alpha$ vs $F(b)$ first.
+
+## 14. Exam Relevance
+
+Exam slides list 4 newsvendor question types:
+1. **Sorted data + (p, c)** → empirical quantile.
+2. **Density given** → integrate to CDF, invert.
+3. **Regression tree** → leaf quantile.
+4. **Linear regression** → $\hat\mu + z_\alpha \hat\sigma$.
+
+Plus practice: Newsvendor-I (uniform/coffee), Newsvendor-II (triangular/donuts).
+
+## 15. Mini Practice
+
+**Q1.** $D \sim U[0,100], p=50, c=30$. $\alpha = 0.4$. $Q^* = 0 + 0.4(100) = 40$.
+
+**Q2.** $D \sim N(100, 15^2), p=80, c=50$. $\alpha = 0.375$, $z_{0.375} \approx -0.319$. $Q^* = 100 - 4.8 \approx 95$.
+
+**Q3.** $D \sim$ Tr[50,100,150], $p=60, c=24$. $\alpha=0.6$. $F(100)=50/100=0.5$. Use upper branch: $Q^* = 150 - \sqrt{0.4 \cdot 50 \cdot 100} = 150 - \sqrt{2000} = 150-44.7=105.3$.
+
+**Q4.** Data [44..62] (20 obs), $p=10, c=4$. $\alpha=0.6$, $\lceil 12 \rceil = 12$. Sorted 12th value = 54.
+
+**Q5.** Contextual: 2 leaves, Leaf A demands [18,22,19,21,20,23,17,19,21,22] (10 obs), $\alpha=0.3 \Rightarrow$ 3rd smallest = 19. Order 19 units for Leaf A customers.
+
+**Q6.** $\hat\mu = 200, \hat\sigma = 30, \alpha = 0.8, z_{0.8}=0.842$. $Q^*= 200 + 25.3 = 225$.
+
+## 16. Cheat Card
+
+| Concept | Formula |
+|---|---|
+| Fractile | $\alpha = c_u/(c_u+c_o) = (p-c)/p$ |
+| Optimal Q | $Q^* = F^{-1}(\alpha)$ |
+| Uniform | $Q^* = a + \alpha(b-a)$ |
+| Normal | $Q^* = \mu + z_\alpha \sigma$ |
+| Empirical | $Q^* = $ ⌈$n\alpha$⌉-th sorted value |
+| Tree contextual | $Q^*(x) = $ leaf's $\alpha$-quantile |
+| Lin reg contextual | $Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$ |
+| $c_u, c_o$ | $c_u = p - c$; $c_o = c - s$ |
+
+**Common $z_\alpha$:** $z_{0.1}=-1.28, z_{0.25}=-0.67, z_{0.5}=0, z_{0.75}=0.67, z_{0.9}=1.28, z_{0.95}=1.65$.
+
+---
+
+## 🎙️ Lecture Transcript Insights — Beyond the Slides
+
+From Prof. Misic's 4/15 lecture.
+
+### THE Key Formula (Emphasized Repeatedly)
+
+> *"There's a formula for finding what that optimal Q is. NO MATTER what your distribution is or what your data set is."*
+
+$$Q^* = F^{-1}\left(\frac{p-c}{p}\right) \quad \Leftrightarrow \quad F(Q^*) = \frac{p-c}{p}$$
+
+> *"This is something that's really easy to calculate."*
+
+**Companion relationship:** $P(\text{lost sales}) = c/p$, independent of distribution.
+
+### Critical Clarifications
+
+**Underage vs Overage (exact $ amounts):**
+- **Overage ($Q > D$):** Paid for $Q$ units, sold $D$. Loss = $c$ per unit OVER.
+- **Underage ($Q < D$):** Demand exceeded supply. Lose $p - c$ per unit UNDER (foregone margin, NOT just price).
+
+> *"It goes up by p right. You sell one more unit but you lose c because you have to stock one more unit. So that's why it's p minus c."*
+
+**Why CDF inversion works (marginal logic):**
+At optimum, marginal benefit = marginal cost:
+- Upside: $p \cdot P(D > Q)$ (revenue if demand exceeds stock)
+- Downside: $c \cdot 1$ (cost of one extra unit)
+- Set equal: $p(1 - F(Q^*)) = c \Rightarrow F(Q^*) = (p-c)/p$.
+
+**Continuous vs Discrete demand:**
+> *"We'll assume that D is a continuous random variable... it makes it actually very easy to analyze. You'll see we'll be working with some integrals."* With discrete data, use empirical quantile (`np.quantile`).
+
+### Sales vs Demand (CRITICAL)
+
+> *"The key thing is the DIFFERENCE between sales and demand."*
+
+- Demand $D$: what customers want.
+- Sales = $\min(Q, D)$: what you can actually sell.
+- If $Q = 80, D = 100$: you sell 80, lose 20 in opportunity.
+
+### Student Q&A
+
+**Q: Why normal vs Poisson?**
+> *"All roads lead to Rome basically... central limit theorem kicks in... they all won't see qualitatively different behavior."*
+
+Only use extreme-tail distributions if you genuinely believe in extreme outcomes.
+
+**Q: Is this daily or long-run?**
+> *"The problem is at a level of a day. But expectations reflect long-run averages. If expected profit is $1,000, your average over many days is very close to $1,000."*
+
+**Q: Can demand autocorrelate?**
+> *"Yes. If yesterday's news sold a lot, today I might order more. That leads to contextual newsvendor."*
+
+**Q: Nurse staffing example** (homework type):
+- Regular nurse cost: $2,160/day. Agency nurse: $5,400/day.
+- Move one nurse closer to demand → save $5,400 (avoid agency) but still pay $2,160 (already-hired regular).
+- $c_u = 5{,}400 - 2{,}160$? Think marginally — how does cost change per unit closer to demand?
+
+### Worked Notebook Examples
+
+**$p = 100, c = 90$ (synthetic demand, 1000 samples):**
+- Optimal $Q^* = 363$.
+- Empirical $P(\text{lost sales}) = 0.898 \approx 0.9 = c/p$. ✓
+
+**$p = 100, c = 70$:**
+- $Q^* = 446$ (LARGER — overage costs less, so we stock more).
+- $P(\text{lost sales}) \approx 0.7 = c/p$. ✓
+
+**$p = 100, c = 10$:**
+- $Q^*$ much larger.
+- $P(\text{lost sales}) \approx 0.1 = c/p$.
+
+> *"This property holds, right, NO MATTER WHAT the distribution is."*
+
+**Gamma distribution test:** Formula still works. Small mismatches from interpolation in quantile function.
+
+### Orange Juice Case — Crucial Insight
+
+Domenic's Spider Foods chain, 83 stores, 11 OJ products. Demographics: age 60+, college %, income, etc.
+
+**Stores have DIFFERENT demand distributions** → contextual newsvendor matters.
+
+**Regression tree (max_depth=2):** Splits on education < 0.449 then income < 0.87. Leaf means: 16k, 11.5k, 38k, 26k units.
+
+> ❗ ***BUT THESE LEAF MEANS ARE NOT THE OPTIMAL ORDER QUANTITIES.***
+
+> *"That's not actually what our order quantity should be."*
+
+The regression tree leaf VALUES minimize squared error (predict the mean). The newsvendor needs the $(p-c)/p$ QUANTILE of demand in each leaf, not the mean.
+
+**Step:** Replace tree leaf VALUE with empirical quantile of demands in that leaf.
+
+### Derivation Strategy for Exam (memorize this 6-step)
+
+1. Write profit: $\pi(Q) = p \min(Q, D) - cQ$
+2. Take expectation: $E[\pi] = pE[\min(Q,D)] - cQ$
+3. Split: $E[\min] = \int_0^Q x f(x)dx + Q \cdot P(D > Q)$
+4. Differentiate (fundamental theorem): $\frac{d}{dQ} \int_0^Q xf(x)dx = Q f(Q)$
+5. Set derivative = 0: $p(1 - F(Q^*)) = c$
+6. Solve: $F(Q^*) = (p-c)/p \Rightarrow Q^* = F^{-1}((p-c)/p)$
+
+### Warnings
+
+- **Sales ≠ Demand.** If $Q < D$: sales = $Q$, NOT $D$.
+- **Point prediction ≠ optimal Q.** Regression mean is for MSE; newsvendor needs QUANTILE.
+- **Perishability assumption** only holds if unsold = zero salvage. Reusable inventory doesn't fit.
+
+### Contextual Newsvendor — Full Procedure
+
+1. Train predictive model (regression tree / linear regression / k-NN) on training data $(X_i, D_i)$.
+2. For each "region" (tree leaf), compute the $(p-c)/p$ EMPIRICAL QUANTILE of demands in that region.
+3. For new context $x$: find which region $x$ falls into → use that quantile as $Q^*(x)$.
+</script>
+<script id="md-zh" type="text/markdown"># 第3周 — 报童问题
+
+## 0. 全局视角
+
+一个报童以成本 $c$ 购买今日报纸，以价格 $p$ 出售。**订购过少 → 失去销售。订购过多 → 未售出（天尾时无价值）。** 这种易腐烂库存折衷适用于面包店、时尚、航空公司（超额预订）、季节性商品和任何易腐烂商品。
+
+## 1. 数学设置
+
+- 随机需求 $D$，分布为 $F$
+- 订购量 $Q$（在观测 $D$ 之前选择）
+- 成本 $c$、售价 $p$、残值 $s$（通常为 0）
+
+**单次实现的利润：**
+$$\pi(Q,D) = p \min(Q,D) + s(Q-D)^+ - cQ$$
+
+当 $s = 0$ 时：$\pi = p \min(Q,D) - cQ$。
+
+## 2. 两种等价表述
+
+### 基于利润
+$$\max_Q E[p \min(Q,D) - cQ]$$
+
+### 基于成本（缺货成本 & 过剩成本）
+$$\min_Q E[c_u(D-Q)^+ + c_o(Q-D)^+]$$
+- $c_u = p - c$（缺货 — 每单位未满足的机会成本）
+- $c_o = c - s$（过剩 — 每单位未售出的净成本）
+
+等价原因：利润 $= (p-c) E[D] - E[c_u(D-Q)^+ + c_o(Q-D)^+]$。第一项在 $Q$ 中为常数。
+
+## 3. 临界分位数 — 推导
+
+### 边际分析
+从 $Q$ 变为 $Q+1$：
+- 如果 $D > Q$：获得 $c_u$（概率 $P(D > Q)$）
+- 如果 $D \le Q$：失去 $c_o$（概率 $P(D \le Q)$）
+
+设边际收益 = 0：
+$$c_u(1 - F(Q^*)) = c_o F(Q^*)$$
+$$F(Q^*) = \frac{c_u}{c_u + c_o}$$
+
+**等价基于利润的形式（当 $s = 0$ 时）：** $F(Q^*) = (p-c)/p$。
+
+### 微积分推导
+$G(Q) = pE[\min(Q,D)] - cQ$。导数：
+$$G'(Q) = p(1 - F(Q)) - c = 0 \Rightarrow F(Q^*) = \frac{p-c}{p}$$
+
+**直观理解：** 希望缺货概率 = $c/p$。薄利（高 $c/p$）→ 库存少。
+
+## 4. 分布 — CDF反演
+
+### 均匀分布 $U[a,b]$
+$F(x) = (x-a)/(b-a)$, $Q^* = a + \alpha(b-a)$。
+
+**示例：** $U[20,80]$, $p=12, c=4, s=2$ → $c_u=8, c_o=2, \alpha=0.8$. $Q^* = 20 + 0.8(60) = 68$。
+
+### 三角分布 Tr$[a, b, c]$（低、众数、高）
+**概率密度函数：**
+$$f(x) = \begin{cases} \frac{2(x-a)}{(b-a)(c-a)} & a \le x \le b \\ \frac{2(c-x)}{(c-b)(c-a)} & b < x \le c \end{cases}$$
+
+**CDF：**
+$$F(x) = \begin{cases} \frac{(x-a)^2}{(b-a)(c-a)} & x \le b \\ 1 - \frac{(c-x)^2}{(c-b)(c-a)} & x > b \end{cases}$$
+
+**反函数：**
+- 如果 $\alpha \le F(b)$：$Q^* = a + \sqrt{\alpha(b-a)(c-a)}$
+- 如果 $\alpha > F(b)$：$Q^* = c - \sqrt{(1-\alpha)(c-b)(c-a)}$
+
+**示例：** Tr[100, 150, 300], $p=4, c=1, s=0 \Rightarrow \alpha = 0.75$。$F(150) = 50/200 = 0.25$。因为 $0.75 > 0.25$，使用上分支：
+$$Q^* = 300 - \sqrt{0.25 \cdot 150 \cdot 200} = 300 - 86.6 = 213$$
+
+### 正态分布 $N(\mu, \sigma^2)$
+$Q^* = \mu + z_\alpha \cdot \sigma$。当 $\alpha < 0.5$ 时 $z_\alpha < 0$。
+
+标准 $z$ 值：$z_{0.5}=0, z_{0.75}=0.674, z_{0.9}=1.282, z_{0.95}=1.645$。
+
+**示例：** $N(500, 100^2), p=100, c=60, \alpha=0.4, z_{0.4}=-0.253$。$Q^* = 500 - 25 = 475$。
+
+### 指数分布 Exp($\lambda$)
+$F(x) = 1 - e^{-\lambda x}$, $Q^* = -\ln(1-\alpha)/\lambda$。
+
+## 5. 基本报童问题笔记本
+
+**单元 1-2：** 从 $N(500, 100^2)$ 模拟 1000 个需求。
+
+**单元 3：** 对于每个 $Q = 1, 2, ..., 999$：
+```python
+profits = [p*min(Q,d) - c*Q for d in demand_data]
+expected_profit.append(np.mean(profits))
+```
+
+**单元 6-7：** 绘制期望利润与 Q → 凹倒抛物线。
+
+**单元 8-10：**
+```python
+optimal_Q = expected_profit.argmax()
+empirical_stockout = sum(d > optimal_Q for d in demand_data) / 1000
+```
+
+**单元 11：** 验证理论：`1 - stats.norm.cdf(optimal_Q, mu, sigma)`。
+
+**单元 18：** 跳过网格搜索 — 直接使用：
+```python
+nv_quantile = (p-c)/p
+optimal_Q = np.quantile(demand_data, nv_quantile)
+```
+
+## 6. 样本平均（经验）报童问题
+
+给定历史需求 $d_1, \ldots, d_n$：
+1. 计算 $\alpha = (p-c)/p$
+2. 排序需求
+3. $Q^* = d_{(\lceil n\alpha \rceil)}$（第 $\lceil n\alpha \rceil$ 个最小值）
+
+**示例：** 10 个需求 [45,52,48,61,55,49,58,51,46,60]。$\alpha=0.8$, $\lceil 8 \rceil = 8$。排序：[45,46,48,49,51,52,55,58,60,61]。$Q^* = 58$。
+
+## 7. 背景变量报童问题 — 全局视角
+
+需求取决于特征 $X$（天气、日期、位置）。想要 $Q^*(X)$ — 作为背景函数的订购量。
+
+两种方法：
+- **回归树**（非参数，将特征空间分割成叶子）
+- **线性回归**（参数，假设 $D|X \sim$ 正态）
+
+## 8. 回归树方法
+
+1. 在训练数据 $(x_i, d_i)$ 上拟合树。
+2. 对每个叶子 $\ell$：收集叶子中样本的需求，计算 $\alpha$ 分位数。
+3. 新的 $x$ → 沿树下降找到叶子 → 使用该叶子的 $Q^*$。
+
+## 9. 线性回归方法
+
+假设 $D | X \sim N(\beta_0 + \beta_1 X_1 + \ldots + \beta_k X_k, \sigma^2)$。
+
+1. 拟合线性回归 → 获得 $\hat\beta$ 和 $\hat\sigma$
+2. 对新的 $x$：$\hat\mu(x) = \hat\beta_0 + \sum \hat\beta_i x_i$
+3. $Q^*(x) = \hat\mu(x) + z_\alpha \cdot \hat\sigma$
+
+**示例：** $\hat\mu = 50 + 2T - 15W$, $\hat\sigma = 20$, $\alpha = 0.4$。明天 $T=85, W=0$ → $\hat\mu = 220$。$z_{0.4} = -0.253$。$Q^* = 220 - 5 = 215$。
+
+## 10. 橙汁笔记本 — 完整演练
+
+**单元 2-3：** 加载含人口统计特征（收入、教育、年龄等）和需求的 OJ 数据。
+
+**单元 5：** 50/50 训练-测试分割。
+
+**单元 7：** 拟合 `DecisionTreeRegressor(max_depth=2)` → 3-4 个叶子。
+
+**单元 21-25：**
+```python
+p, c = 3.00, 2.10
+nv_quantile = (p-c)/p  # = 0.30
+leaves = [2, 3, 5, 6]
+leaf_to_quantile = np.zeros(tree.node_count)
+for leaf in leaves:
+    demands_in_leaf = y_train[oj_tree.apply(X_train) == leaf]
+    leaf_to_quantile[leaf] = np.quantile(demands_in_leaf, nv_quantile)
+```
+
+**单元 29-30：** 样本外评估：
+```python
+test_leaves = oj_tree.apply(X_test)
+test_orders = leaf_to_quantile[test_leaves]
+test_profit = p * np.minimum(test_orders, y_test) - c * test_orders
+# 背景平均约 $4028/周
+```
+
+**单元 31-32：** 非背景基准（所有商店单一 Q）约 $3932/周。背景增益约 2.4%。
+
+## 11. 期望利润计算
+
+$$E[\pi(Q^*, D)] = pE[\min(Q^*, D)] - cQ^*$$
+
+其中：
+$$E[\min(Q^*, D)] = \int_0^{Q^*} x f(x) dx + Q^* [1 - F(Q^*)]$$
+
+替代方式：$G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$。
+
+**工作示例（咖啡、均匀）：** $Q^* = 68$, $E[\pi^*] = $352。完整利润：
+$$\pi^* = pE[D] - E[\text{损失}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
+
+## 12. 逐步模板
+
+### (a) 已知分布
+1. 计算 $\alpha = (p-c)/p$ 或 $c_u/(c_u+c_o)$
+2. 反演 CDF：$Q^* = F^{-1}(\alpha)$
+3. （可选）计算期望利润
+
+### (b) 样本数据
+1. 计算 $\alpha$
+2. 排序需求
+3. $Q^* = $ ⌈$n\alpha$⌉ 个最小值
+
+### (c) 回归树
+1. 沿树下降 $x$ 找到叶子 $\ell$
+2. $Q^*(x) = $ $\ell$ 中需求的经验 $\alpha$ 分位数
+
+### (d) 线性回归
+1. 拟合线性模型，获得 $\hat\beta, \hat\sigma$
+2. 预测均值 $\hat\mu(x)$
+3. $Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$
+
+## 13. 常见错误
+
+1. **分位数方向错误。** $F(Q^*) = \alpha$（CDF），而非 $P(D > Q^*) = \alpha$。
+2. **遗忘残值。** 如果 $s > 0$：$c_o = c - s$（不仅仅是 $c$）。
+3. **二次方程根错误。** 三角形：$Q^* = 300 \pm 86.6$ — 选择 $[a, c]$ 中的根，即 213。
+4. **在经验分位数中使用 $\lfloor n\alpha \rfloor$ 而非 ⌈$n\alpha$⌉**。
+5. **当 $\alpha < 0.5$ 时遗忘 $z_\alpha < 0$。** 当缺货廉价时，订购低于均值。
+6. **使用均值作为 $Q^*$。** 仅当 $\alpha = 0.5$ 时正确。
+7. **树过度拟合。** 使用 max_depth ≤ 4。
+8. **三角形的 CDF 分支错误。** 先检查 $\alpha$ 与 $F(b)$ 的关系。
+
+## 14. 考试相关
+
+考试幻灯片列出 4 种报童问题类型：
+1. **排序数据 + (p, c)** → 经验分位数。
+2. **密度给定** → 积分到 CDF，反演。
+3. **回归树** → 叶子分位数。
+4. **线性回归** → $\hat\mu + z_\alpha \hat\sigma$。
+
+加上练习：报童-I（均匀/咖啡）、报童-II（三角形/甜甜圈）。
+
+## 15. 迷你练习
+
+**Q1.** $D \sim U[0,100], p=50, c=30$。$\alpha = 0.4$。$Q^* = 0 + 0.4(100) = 40$。
+
+**Q2.** $D \sim N(100, 15^2), p=80, c=50$。$\alpha = 0.375$, $z_{0.375} \approx -0.319$。$Q^* = 100 - 4.8 \approx 95$。
+
+**Q3.** $D \sim$ Tr[50,100,150], $p=60, c=24$。$\alpha=0.6$。$F(100)=50/100=0.5$。使用上分支：$Q^* = 150 - \sqrt{0.4 \cdot 50 \cdot 100} = 150 - \sqrt{2000} = 150-44.7=105.3$。
+
+**Q4.** 数据 [44..62]（20 个观察），$p=10, c=4$。$\alpha=0.6$, $\lceil 12 \rceil = 12$。排序第 12 个值 = 54。
+
+**Q5.** 背景变量：2 个叶子，叶子 A 需求 [18,22,19,21,20,23,17,19,21,22]（10 个观察），$\alpha=0.3 \Rightarrow$ 第 3 个最小值 = 19。为叶子 A 客户订购 19 单位。
+
+**Q6.** $\hat\mu = 200, \hat\sigma = 30, \alpha = 0.8, z_{0.8}=0.842$。$Q^*= 200 + 25.3 = 225$。
+
+## 16. 速查表
+
+| 概念 | 公式 |
+|---|---|
+| 分位数 | $\alpha = c_u/(c_u+c_o) = (p-c)/p$ |
+| 最优 Q | $Q^* = F^{-1}(\alpha)$ |
+| 均匀分布 | $Q^* = a + \alpha(b-a)$ |
+| 正态分布 | $Q^* = \mu + z_\alpha \sigma$ |
+| 经验 | $Q^* = $ ⌈$n\alpha$⌉ 个排序值 |
+| 树背景变量 | $Q^*(x) = $ 叶子的 $\alpha$ 分位数 |
+| 线性回归背景变量 | $Q^*(x) = \hat\mu(x) + z_\alpha \hat\sigma$ |
+| $c_u, c_o$ | $c_u = p - c$; $c_o = c - s$ |
+
+**常见 $z_\alpha$：** $z_{0.1}=-1.28, z_{0.25}=-0.67, z_{0.5}=0, z_{0.75}=0.67, z_{0.9}=1.28, z_{0.95}=1.65$。
+
+---
+
+## 讲座录音见解 — 超越幻灯片
+
+来自 Prof. Misic 的 4/15 讲座。
+
+### 关键公式（反复强调）
+
+> "有一个公式来找到最优 Q。无论你的分布是什么或数据集是什么。"
+
+$$Q^* = F^{-1}\left(\frac{p-c}{p}\right) \quad \Leftrightarrow \quad F(Q^*) = \frac{p-c}{p}$$
+
+> "这是非常容易计算的东西。"
+
+**伴随关系：** $P(\text{失去销售}) = c/p$，与分布无关。
+
+### 关键澄清
+
+**缺货与过剩（精确金额）：**
+- **过剩（$Q > D$）：** 为 $Q$ 单位付费，售出 $D$。损失 = 每单位超出部分 $c$。
+- **缺货（$Q < D$）：** 需求超过供应。每单位未满足损失 $p - c$（放弃的利润，不仅仅是价格）。
+
+> "它增加 p 对吧。你售出一个单位但你损失 c，因为你必须库存一个单位。所以这就是为什么它是 p 减 c。"
+
+**为什么 CDF 反演起作用（边际逻辑）：**
+在最优点，边际收益 = 边际成本：
+- 上行：$p \cdot P(D > Q)$（需求超过库存的收益）
+- 下行：$c \cdot 1$（一个额外单位的成本）
+- 设置相等：$p(1 - F(Q^*)) = c \Rightarrow F(Q^*) = (p-c)/p$。
+
+**连续 vs 离散需求：**
+> "我们将假设 D 是连续随机变量...这使分析实际上非常容易。你会看到我们将与一些积分一起工作。" 使用离散数据时，使用经验分位数（`np.quantile`）。
+
+### 销售与需求（关键）
+
+> "关键是销售和需求之间的差异。"
+
+- 需求 $D$：客户想要什么。
+- 销售 = $\min(Q, D)$：你实际能售出什么。
+- 如果 $Q = 80, D = 100$：你售出 80，在机会中失去 20。
+
+### 学生问答
+
+**Q：为什么选择正态而非泊松？**
+> "所有道路通罗马基本上...中心极限定理发挥作用...他们都不会看到质量不同的行为。"
+
+只有当你真正相信极端结果时，才使用极端尾分布。
+
+**Q：这是日常还是长期？**
+> "问题处于一天的层面。但期望反映长期平均。如果期望利润是 $1,000，你的平均超过许多天非常接近 $1,000。"
+
+**Q：需求能否自相关？**
+> "是的。如果昨天的新闻卖得很好，今天我可能会订购更多。这导致背景变量报童问题。"
+
+**Q：护士配备示例**（作业类型）：
+- 正式护士成本：$2,160/天。代理护士：$5,400/天。
+- 将一个护士移向需求 → 节省 $5,400（避免代理）但仍支付 $2,160（已雇用的正式）。
+- $c_u = 5{,}400 - 2{,}160$？从边际思考 — 每个单位更接近需求的成本如何变化？
+
+### 工作笔记本示例
+
+**$p = 100, c = 90$（合成需求，1000 个样本）：**
+- 最优 $Q^* = 363$。
+- 经验 $P(\text{失去销售}) = 0.898 \approx 0.9 = c/p$。 ✓
+
+**$p = 100, c = 70$：**
+- $Q^* = 446$（更大 — 过剩成本更低，所以库存更多）。
+- $P(\text{失去销售}) \approx 0.7 = c/p$。 ✓
+
+**$p = 100, c = 10$：**
+- $Q^*$ 更大。
+- $P(\text{失去销售}) \approx 0.1 = c/p$。
+
+> "这个性质成立对吧，无论分布是什么。"
+
+**伽马分布测试：** 公式仍然有效。分位数函数中插值的小不匹配。
+
+### 橙汁案例 — 关键见解
+
+Domenic 的 Spider Foods 连锁店，83 家商店，11 种 OJ 产品。人口统计：60 岁以上、大学学位百分比、收入等。
+
+**商店有不同的需求分布** → 背景变量报童问题很重要。
+
+**回归树（max_depth=2）：** 在教育 < 0.449 上分割，然后收入 < 0.87。叶子均值：16k、11.5k、38k、26k 单位。
+
+> ❗ ***但这些叶子均值不是最优订购量。***
+
+> "这实际上不是我们订购量应该是什么。"
+
+回归树叶值最小化平方误差（预测均值）。报童需要每个叶子中需求的 $(p-c)/p$ 分位数，而不是均值。
+
+**步骤：** 用叶子中需求的经验分位数替换树叶值。
+
+### 考试推导策略（记住这 6 步）
+
+1. 写利润：$\pi(Q) = p \min(Q, D) - cQ$
+2. 取期望：$E[\pi] = pE[\min(Q,D)] - cQ$
+3. 分割：$E[\min] = \int_0^Q x f(x)dx + Q \cdot P(D > Q)$
+4. 微分（基本定理）：$\frac{d}{dQ} \int_0^Q xf(x)dx = Q f(Q)$
+5. 设导数 = 0：$p(1 - F(Q^*)) = c$
+6. 求解：$F(Q^*) = (p-c)/p \Rightarrow Q^* = F^{-1}((p-c)/p)$
+
+### 警告
+
+- **销售 ≠ 需求。** 如果 $Q < D$：销售 = $Q$，而非 $D$。
+- **点预测 ≠ 最优 Q。** 回归均值用于 MSE；报童需要分位数。
+- **易腐烂性假设**仅在未售出 = 零残值时成立。可重用库存不符合。
+
+### 背景变量报童问题 — 完整程序
+
+1. 在训练数据 $(X_i, D_i)$ 上训练预测模型（回归树 / 线性回归 / k-NN）。
+2. 对于每个"区域"（树叶），计算该区域中需求的 $(p-c)/p$ 经验分位数。
+3. 对于新背景 $x$：找出 $x$ 属于哪个区域 → 使用该分位数作为 $Q^*(x)$。
+</script>
+
+<script>
+function renderContent(lang) {
+  const id = (lang === 'zh') ? 'md-zh' : 'md-en';
+  const src = document.getElementById(id).textContent;
+  document.getElementById('content').innerHTML = marked.parse(src);
+  // Swap banner labels too
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
+    // Only update simple text spans (not children)
+    if (el.children.length === 0) el.textContent = txt;
+  });
+  // Re-typeset MathJax
+  setTimeout(() => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([document.getElementById('content')]);
+    }
+  }, 50);
+}
+
+// Initial render based on saved preference
+const initLang = localStorage.getItem('site_lang') || 'en';
+renderContent(initLang);
+
+// Listen for language change events from script.js
+window.addEventListener('langchange', e => renderContent(e.detail));
+</script>
+<script src="script.js"></script>
+</body>
+</html>

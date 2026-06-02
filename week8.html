@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 8 — Traveling Salesman | MGMTMSA 408</title>
+<link rel="stylesheet" href="style.css">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<aside class="sidebar">
+<h1>MGMTMSA 408</h1>
+<p class="subtitle">Operations Analytics — Final Review</p>
+<nav>
+<a href="index.html">🏠 Dashboard</a>
+<a href="strategy.html">🎯 Exam Strategy</a>
+<a href="week1.html">Week 1 — LP Duality</a>
+<a href="week2.html">Week 2 — Revenue Management</a>
+<a href="week3.html">Week 3 — Newsvendor Problem</a>
+<a href="week4.html">Week 4 — Location Models</a>
+<a href="week5.html">Week 5 — Assortment Optimization</a>
+<a href="week6.html">Week 6 — Pricing</a>
+<a href="week7.html">Week 7 — Network Flows</a>
+<a href="week8.html" class="active">Week 8 — Traveling Salesman</a>
+<a href="formulas.html">📐 Formula Sheet</a>
+<a href="templates.html">🧩 Problem Templates</a>
+<a href="crash.html">🚨 Night Before Exam</a>
+</nav>
+</aside>
+<main>
+<div class="week-banner">
+<div class="week-meta">
+<span class="week-num" data-en="Week 8" data-zh="第8周">Week 8</span>
+<h1><span data-en="Traveling Salesman" data-zh="旅行商问题">Traveling Salesman</span> <span class="cn">旅行商问题</span></h1>
+<p class="topics" data-en="TSP formulation, subtour elimination, lazy callbacks, getSubtours trace, modifications" data-zh="TSP formulation, subtour elimination, lazy callbacks, getSubtours trace, modifications">TSP formulation, subtour elimination, lazy callbacks, getSubtours trace, modifications</p>
+</div>
+<div class="open-pdf">
+<strong><span data-en="📖 Open lecture PDF alongside:" data-zh="📖 同时打开讲义PDF：">📖 Open lecture PDF alongside:</span></strong><br>
+<code>../8/Lecture8_Transportation_v1-1.pdf</code>
+</div>
+</div>
+<article id="content" class="markdown-body"></article>
+</main>
+
+<script id="md-en" type="text/markdown"># Week 8 — Traveling Salesman Problem 旅行商问题
+
+## 0. Big Picture
+
+A salesman starts in one city, must visit $n$ cities EXACTLY ONCE, and return to start. Minimize total distance.
+
+**Real applications:** warehouse order picking, delivery routing, manufacturing sequencing (e.g., aluminum alloy production order), circuit board drilling.
+
+TSP is **NP-hard**. With $n=20$ → $6 \times 10^{16}$ tours. Can't brute force. But modern solvers + **lazy constraint generation** solve $n = 61$ in seconds.
+
+## 1. Why TSP is Hard
+
+Number of distinct tours = $(n-1)!/2$ for symmetric. For $n = 60$: $\approx 10^{81}$. Universe is $10^{10}$ years old. Brute force impossible.
+
+## 2. Naive Formulation (Why It Fails)
+
+### Variables
+$x_{ij} \in \{0,1\}$: travel directly from city $i$ to city $j$ (directed).
+
+### Degree Constraints 度约束
+$$\sum_{j \ne i} x_{ij} = 1 \quad \forall i \quad \text{(leave each city once)}$$
+$$\sum_{j \ne i} x_{ji} = 1 \quad \forall i \quad \text{(enter each city once)}$$
+
+### Objective
+$$\min \sum_i \sum_{j \ne i} d_{ij} x_{ij}$$
+
+### Why It Fails: Subtours
+Degree constraints alone allow **disconnected cycles**.
+
+**Example (n=4):** $x_{12}=1, x_{21}=1, x_{34}=1, x_{43}=1$. All degree constraints satisfied. But this is two 2-cycles, NOT a single tour!
+
+## 3. Subtour Elimination Constraints (SECs) 子环路消除约束
+
+### Definition
+A **subtour** is a cycle through a proper subset $S \subsetneq V$ of cities.
+
+### SEC
+For every proper nonempty subset $S \subsetneq V$:
+$$\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$$
+
+**Intuition:** A cycle within $S$ would use $|S|$ edges. Allowing at most $|S| - 1$ internal edges forbids cycles within $S$.
+
+### Equivalent Cut Form
+$$\sum_{i \in S, j \notin S} x_{ij} \ge 1$$
+
+"At least one edge must leave subset $S$" → ensures connectivity.
+
+### Examples
+**$S = \{1, 2\}$:** $x_{12} + x_{21} \le 1$.
+**$S = \{0, 1, 8\}$ (3 cities):** $x_{01}+x_{08}+x_{10}+x_{18}+x_{80}+x_{81} \le 2$ (6 ordered pairs, allow at most 2 = $|S|-1$).
+
+### The Constraint Count Problem
+$2^n - 2$ proper nonempty subsets. For $n = 61$: $2 \times 10^{18}$. Impossible to list explicitly. Use lazy constraints.
+
+## 4. Lazy Constraint Generation 懒约束回调
+
+### Algorithm
+1. Solve with ONLY degree constraints.
+2. Solver finds integer solution (may have subtours).
+3. **Callback** detects subtours via `getSubtours()`.
+4. For each detected subtour $S$: add SEC dynamically.
+5. Solver continues. Repeat until ONE tour spans all $n$ cities.
+
+### Gurobi Syntax
+```python
+m.params.LazyConstraints = 1
+
+def eliminateSubtours(model, where):
+    if where == GRB.Callback.MIPSOL:
+        x_val = model.cbGetSolution(x)
+        sequence = [(i,j) for (i,j) in od_pairs if x_val[i,j] > 0.5]
+        subtour_list = getSubtours(sequence)
+        if len(subtour_list) > 1:
+            for S in subtour_list:
+                model.cbLazy(
+                    sum(x[i,j] for i in S for j in S if i!=j) <= len(S) - 1
+                )
+
+m.optimize(eliminateSubtours)
+```
+
+## 5. getSubtours Function — Detailed Trace
+
+```python
+def getSubtours(sequence):
+    subtour_list = []
+    unvisited = list(range(n))
+    while len(unvisited) > 0:
+        node = unvisited[0]
+        unvisited.remove(node)
+        subtour = [node]
+        next_node = list(filter(lambda t: t[0]==node, sequence))[0][1]
+        while next_node in unvisited:
+            subtour.append(next_node)
+            unvisited.remove(next_node)
+            next_node = list(filter(lambda t: t[0]==next_node, sequence))[0][1]
+        subtour_list.append(subtour)
+    return subtour_list
+```
+
+**Algorithm:**
+- Pick an unvisited node, follow outgoing edges through sequence.
+- Stop when you hit a visited node (cycle closes).
+- Record as one subtour; repeat with remaining unvisited.
+
+### Trace Example (Practice Problem n=9)
+sequence = `[(2,5),(1,8),(3,2),(4,6),(0,1),(7,3),(6,4),(8,0),(5,7)]`
+
+Start from node 0:
+- 0 → 1 → 8 → 0. Subtour: [0, 1, 8]. Remove from unvisited.
+
+Pick next unvisited (2):
+- 2 → 5 → 7 → 3 → 2. Subtour: [2, 5, 7, 3].
+
+Pick next (4):
+- 4 → 6 → 4. Subtour: [4, 6].
+
+**Final output:** `[[0,1,8], [2,5,7,3], [4,6]]`.
+
+This is HIGH EXAM RELEVANCE — likely to be asked.
+
+## 6. The Starbucks Notebook — Cell Walkthrough
+
+61 Starbucks locations in West LA. Google Maps travel times (asymmetric).
+
+```python
+starbucks_locations = pd.read_csv("starbucks_address_lat_lon.csv")  # 61 rows
+dist_mat = pd.read_csv("starbucks_dist_mat_full_noNAs.csv")
+# Use "Time" column (seconds)
+```
+
+### Build model with degree constraints only
+```python
+m = Model()
+x = m.addVars(od_pairs, vtype=GRB.BINARY)
+for i in range(61):
+    m.addConstr(sum(x[i,j] for j in range(61) if j!=i) == 1)
+    m.addConstr(sum(x[j,i] for j in range(61) if j!=i) == 1)
+m.setObjective(sum(time[i,j]*x[i,j] for (i,j) in od_pairs), GRB.MINIMIZE)
+```
+
+### Add lazy callback (see Section 4)
+
+### Solve
+```python
+m.params.LazyConstraints = 1
+m.optimize(eliminateSubtours)
+# Optimal tour: 16,816 seconds (~4hr 40min)
+# ~101 lazy SECs added
+# Solve time < 1 second
+```
+
+### Tour reconstruction & visualization
+```python
+sequence = [(i,j) for (i,j) in od_pairs if x[i,j].x > 0.5]
+complete_tour = getSubtours(sequence)[0]  # Single tour
+# Plot on Folium map
+```
+
+## 7. Hand-Computable 4-City Example
+
+Distance matrix:
+```
+    0   1   2   3
+0   -  10  15  20
+1  10   -   5  12
+2  15   5   -   8
+3  20  12   8   -
+```
+
+**Naive (degree only):** Solver might return $x_{01}=x_{10}=x_{23}=x_{32}=1$. Cost = 36. But TWO subtours: {0,1} and {2,3}.
+
+**Add SECs:**
+- $x_{01} + x_{10} \le 1$
+- $x_{23} + x_{32} \le 1$
+
+**Re-solve:** Forces $x_{01}=x_{12}=x_{23}=x_{30}=1$ (tour 0→1→2→3→0). Cost = 10+5+8+20 = 43. Valid single tour. Done.
+
+## 8. Manhattan Distance Formula
+
+For warehouse problem: $d_{ij} = (1/c)(|u_i - u_j| + |v_i - v_j|)$, where $c$ = speed.
+
+**Example:** Locations (0,0), (50,30), (20,80), speed 10 m/s.
+- $d_{01} = (50+30)/10 = 8$s
+- $d_{02} = (20+80)/10 = 10$s
+- $d_{12} = (30+50)/10 = 8$s
+
+Both directions identical → symmetric.
+
+## 9. TSP Modifications
+
+### A. End at Different Location (n+1)
+Add node $n+1$, distances $t_{i,n+1}$ from each location. Add constraint $x_{n+1, 1} = 1$ (so "tour" wraps from end back to start; meaningful path is start → ... → $n+1$).
+
+### B. Hamiltonian Path (different start, end)
+- Start city: out-degree = 1, in-degree = 0
+- End city: out-degree = 0, in-degree = 1
+- Others: in = out = 1
+
+### C. Time Windows (TSPTW)
+Add continuous $t_i$ = arrival time. Constraints:
+- $a_i \le t_i \le b_i$ (window)
+- $t_j \ge t_i + d_{ij} - M(1 - x_{ij})$ (big-M propagation)
+
+### D. Vehicle Capacity (CVRP)
+Add flow $f_{ij}$ variables tracking load. $f_{ij} \le Q x_{ij}$.
+
+### E. Multiple Vehicles (mTSP)
+$x_{ijk}$ indexed by vehicle. Each city visited by exactly one vehicle.
+
+## 10. Practice Problem TSP-I (Warehouse) — Full Walkthrough
+
+### Setup
+- $n-1$ items + start location 1
+- Each item at $(u_i, v_i)$
+- Speed $c$
+- Distance $t_{ij} = (1/c)(|u_i - u_j| + |v_i - v_j|)$
+
+### (a) IP Formulation
+$$\min \sum_i \sum_{j \ne i} t_{ij} x_{ij}$$
+s.t. degree constraints, SECs for all proper subsets, binary.
+
+### (b) Trace getSubtours
+sequence = `[(2,5),(1,8),(3,2),(4,6),(0,1),(7,3),(6,4),(8,0),(5,7)]`
+Output: `[[0,1,8], [2,5,7,3], [4,6]]`.
+
+### (c) SECs Added by Callback
+For [0,1,8]: $x_{01}+x_{08}+x_{10}+x_{18}+x_{80}+x_{81} \le 2$.
+For [2,5,7,3]: 12 terms, $\le 3$.
+For [4,6]: $x_{46} + x_{64} \le 1$.
+
+### (d) Modification: End at Different Location (n+1)
+Add node $n+1$, distances from coordinates, set $x_{n+1, 1} = 1$.
+
+## 11. Step-by-Step Methods
+
+### (a) Recognize TSP from word problem
+Single entity visits multiple locations, returns to start, minimize distance.
+
+### (b) Compute distance matrix
+Manhattan or Euclidean per problem. Convert to time if speed given.
+
+### (c) Write degree constraints
+In-degree = 1, out-degree = 1 for each city.
+
+### (d) Add SECs (lazy callback for $n > 10$)
+
+### (e) Trace getSubtours
+Pick unvisited, follow edges, close cycle, repeat.
+
+### (f) Identify SECs from subtour list
+For each subtour $S$: $\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$.
+
+### (g) Modify for end-at-different-location
+
+## 12. Common Mistakes ⚠️
+
+1. **Forgetting SECs entirely.** Naïve formulation produces subtours.
+2. **Confused directed vs undirected.** Both $x_{ij}$ AND $x_{ji}$ in SEC.
+3. **Wrong RHS in SEC.** It's $|S| - 1$, NOT $|S|$.
+4. **Missing $j \ne i$ qualifier.** Excludes self-loops.
+5. **Wrong getSubtours trace** — track unvisited carefully.
+6. **Callback fires only at MIPSOL,** not every LP node.
+7. **Forgetting to set LazyConstraints = 1.**
+8. **Single-node "subtours"** shouldn't generate SECs (callback checks $> 1$).
+9. **Big-M too small** in TSPTW.
+
+## 13. Exam Relevance
+
+Exam slides list 4 TSP question types:
+1. **Formulate IP** (recognize TSP, write degree + SEC + binary).
+2. **Trace getSubtours** for given sequence.
+3. **Identify SECs added by callback** for given subtour list.
+4. **Modify formulation** (end at different location, etc.).
+
+Practice TSP-I covers all 4. Study it thoroughly.
+
+## 14. Mini Practice
+
+**Q1.** 8 stores + central hub. Formulate TSP.
+
+$\min \sum t_{ij} x_{ij}$ s.t. degree=1 each city, SECs for all subsets, binary.
+
+**Q2.** Locations (20,30) and (60,50), speed 5 m/s. Manhattan time?
+
+$d = |40| + |20| = 60$. $t = 60/5 = 12$s.
+
+**Q3.** sequence = `[(0,1),(1,3),(3,0),(2,4),(4,2)]`. getSubtours output?
+
+Pop 0: 0 → 1 → 3 → 0. [0,1,3].
+Pop 2: 2 → 4 → 2. [2,4].
+Output: `[[0,1,3], [2,4]]`.
+
+**Q4.** SECs for detected subtours [1,2] and [3,4,5]?
+
+For {1,2}: $x_{12} + x_{21} \le 1$.
+For {3,4,5}: $x_{34}+x_{35}+x_{43}+x_{45}+x_{53}+x_{54} \le 2$.
+
+**Q5.** Modify formulation for time windows $[a_i, b_i]$.
+
+Add continuous $t_i$, constraints $a_i \le t_i \le b_i$ and $t_j \ge t_i + d_{ij} - M(1 - x_{ij})$.
+
+## 15. Cheat Card
+
+### TSP Formulation
+```
+VARIABLES: x_ij ∈ {0,1} for i≠j
+OBJECTIVE: min Σ_i Σ_{j≠i} d_ij x_ij
+CONSTRAINTS:
+  Σ_{j≠i} x_ij = 1  ∀i  (out-degree)
+  Σ_{j≠i} x_ji = 1  ∀i  (in-degree)
+  Σ_{i∈S} Σ_{j∈S,j≠i} x_ij ≤ |S|-1  ∀S⊊V, S≠∅  (SEC)
+  x_ij ∈ {0,1}
+```
+
+### getSubtours Logic
+1. Pick unvisited node.
+2. Follow outgoing edges through sequence.
+3. Stop at visited node (cycle closes).
+4. Record subtour, remove from unvisited, repeat.
+
+### Lazy Callback (Gurobi)
+- `m.params.LazyConstraints = 1`
+- Inside callback at `MIPSOL`:
+  - `model.cbGetSolution(x)`
+  - Find subtours
+  - `model.cbLazy(...)`for each subtour
+
+### Key Reminders
+- SECs use BOTH $x_{ij}$ and $x_{ji}$ (directed).
+- RHS of SEC is $|S| - 1$.
+- $\sum_{i \in S} \sum_{j \in S, j \ne i}$ → counts each directed pair once.
+- $|S|$ nodes → up to $|S|(|S|-1)$ ordered pairs → cap at $|S|-1$.
+
+---
+
+## 🎙️ Lecture Transcript Insights — Beyond the Slides
+
+From Prof. Misic's 5/20 lecture (TSP intro) + 5/27 (TSP continuation + EXAM PREP).
+
+### Setup Reminders
+
+**Starbucks problem:** Replenish 61 West LA Starbucks locations from one vehicle. Travel times from Google Maps API are ASYMMETRIC (one-way streets, traffic).
+
+**Naive formulation fails:** Only degree constraints → solver produces multiple DISCONNECTED CYCLES (subtours).
+
+### Why getSubtours Walkthrough Is GUARANTEED on Exam
+
+> ❗ ***Prof's exact words: "If you encounter this question in the exam... I will give you this code. I would expect you to be able to read it. And, if I ask you what's the output... you should be able to do that."***
+
+This is a CONFIRMED exam question type. Practice tracing the function.
+
+### Subtour Elimination Manually (Toy 4-City)
+
+Without SECs: solver returns (0→3→0) and (1→2→1). Two disconnected cycles.
+
+Manually add:
+- $x_{14} + x_{41} \le 1$ — forbid 1↔4 cycle
+- $x_{23} + x_{32} \le 1$ — forbid 2↔3 cycle
+
+After adding: optimal jumps from **841 → 938**, single tour (0→3→2→1→0).
+
+### Complexity (Why Lazy Constraints Matter)
+
+Number of subsets for $N$ cities: $2^N$.
+- $N=10$: ~1,000 constraints
+- $N=20$: ~1,000,000 constraints
+- $N=30$: ~1,000,000,000 constraints
+- $N=61$: $\approx 2.3 \times 10^{18}$
+
+> *"Impossible to enumerate upfront."*
+
+### Lazy Constraint Algorithm
+
+1. Solve TSP WITHOUT subtour constraints.
+2. Check solution for subtours via getSubtours().
+3. If subtours found, ADD constraints eliminating them.
+4. Re-solve.
+5. Repeat until single tour remains.
+
+### Starbucks Solution Stats
+
+- Optimal: **16,816 seconds** ≈ 4.67 hours driving
+- Only **91 lazy constraints** needed (not $2^{61}$!)
+- Solved in **< 0.2 seconds**
+
+> *"Demonstrates the BET that few constraints suffice in practice."*
+
+### When getSubtours Returns 1 Element
+
+`len(subtour_list) == 1` ⇒ NOT actually a subtour — it's the COMPLETE TOUR. Solution is feasible.
+
+### Multiple Subtours in Single Callback
+
+If 3 subtours found: add 3 constraints in ONE callback invocation. More efficient than one-per-iteration.
+
+---
+
+# 🚨 FINAL REVIEW SESSION INSIGHTS (5/27)
+
+## EXAM SCOPE & COVERAGE — CONFIRMED
+
+### What IS on the Exam
+
+> *Prof. Misic's EXACT quote (5/27):*
+> *"Basically everything through the end of the week, which we just finished, all of that is fair game for the final exam. So any of those topics from LP duality to traveling salesman problem, which we just finished, all of that can show up in the exam."*
+
+**Confirmed topics (Weeks 1–8):**
+1. LP Duality
+2. Revenue Management
+3. Inventory / Newsvendor
+4. Location
+5. Assortment
+6. Pricing
+7. Network Flow / Shortest Path / Min-Cost
+8. TSP
+
+### What is NOT on the Exam
+
+> *Prof's exact words (5/27):*
+> *"What we're going to start now is column generation, which I will not test you on the exam."*
+
+**EXCLUDED:**
+- Column Generation (Week 9)
+- Matching Problem (Week 10, organ/kidney) — comes after column generation
+
+### Exam Structure
+
+- **~6 questions with multiple parts**
+- **NOT ALL 8 TOPICS will be covered** — some may be omitted
+- Multiple question types within each topic
+
+### Exam Logistics
+
+- **Non-graphing scientific calculator REQUIRED** (~$15 on Amazon, returnable)
+- Graphing calculators NOT allowed
+- Need it for numerical calculations
+- Date/location/rules: see email + syllabus
+
+## EXAM PREPARATION GUIDANCE (5/27)
+
+### What Prof Said To Do
+
+1. Review all **homework problems** you completed.
+2. Work through all **practice problems**.
+3. Pay attention to the **4 key weeks** of example problems on Final Exam Preparation slides.
+4. Be comfortable with formulations from each week.
+
+### Direct Quotes
+
+> *"If you go through the practice problems on your own, you should be fine in the exam."*
+
+> *"If you did the homework on your own [without copying to ChatGPT at 11pm], you will be fine with the exam."*
+
+> *"If you did none of these... you have two weeks."*
+
+### Sample Question Types (Direct Examples Given)
+
+**LP Duality:**
+- Given primal LP, formulate the dual.
+- Verify solution optimality using dual.
+- Interpret shadow prices.
+- Predict objective change if resource quantity increases by 100 units.
+- Understand shadow prices give LINEAR APPROXIMATION.
+
+**Other weeks:** Listed in preparation slides (Slides_FinalExam.pdf).
+
+## TSP-SPECIFIC EXAM EXPECTATIONS (5/27)
+
+### Code Reading Question — CONFIRMED
+
+> *"If you encounter this question in the exam, I will give you this code. I would expect you to be able to read it. And if I ask you what's the output, you should be able to do that."*
+
+**You will be given:** the `getSubtours()` function code + an example input (sequence of edges).
+**You'll be asked:** "What is the output (list of subtours)?"
+
+**Similar question exists in practice problems** — use it to prepare.
+
+### What You Must Master
+
+- How `getSubtours()` traces edges from a solution.
+- How it identifies cycles.
+- How output list-of-lists is structured.
+- Edge case: `len(subtour_list) == 1` (full valid tour, no more SECs needed).
+
+## KEY TAKEAWAY
+
+Prof. invested ENTIRE 5/27 lecture on TSP (except the W9 intro he flagged as not testable). This signals TSP is a **high-priority exam topic** — even though the final exam slide says "if time permits."
+
+Subtour elimination + lazy constraint generation + getSubtours trace are the technical innovations to master.
+</script>
+<script id="md-zh" type="text/markdown"># 第 8 周 — 旅行商问题
+
+## 0. 大局
+
+一个推销员从一个城市出发，必须恰好访问 $n$ 个城市一次，然后返回起点。最小化总距离。
+
+**实际应用：** 仓库订单分拣、配送路线规划、制造顺序排列（例如，铝合金生产订单）、电路板钻孔。
+
+TSP 是 **NP-难** 问题。对于 $n=20$ → $6 \times 10^{16}$ 条路线。无法蛮力破解。但现代求解器 + **懒约束生成** 可以在几秒内求解 $n = 61$。
+
+## 1. 为什么 TSP 很难
+
+不同路线的数量 = $(n-1)!/2$（对称情况）。对于 $n = 60$：$\approx 10^{81}$。宇宙已有 $10^{10}$ 岁。蛮力不可能。
+
+## 2. 幼稚的表述（为什么它失败）
+
+### 变量
+$x_{ij} \in \{0,1\}$：直接从城市 $i$ 到城市 $j$ 的旅行（有向）。
+
+### 度约束
+$$\sum_{j \ne i} x_{ij} = 1 \quad \forall i \quad \text{（离开每个城市一次）}$$
+$$\sum_{j \ne i} x_{ji} = 1 \quad \forall i \quad \text{（进入每个城市一次）}$$
+
+### 目标函数
+$$\min \sum_i \sum_{j \ne i} d_{ij} x_{ij}$$
+
+### 为什么它失败：子环路
+仅度约束允许 **不连通的循环**。
+
+**例子（n=4）：** $x_{12}=1, x_{21}=1, x_{34}=1, x_{43}=1$。所有度约束都满足。但这是两个 2-循环，而非单一行程！
+
+## 3. 子环路消除约束
+
+### 定义
+**子环路** 是通过城市的一个真子集 $S \subsetneq V$ 的循环。
+
+### 子环路消除约束
+对于每个真非空子集 $S \subsetneq V$：
+$$\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$$
+
+**直觉：** $S$ 内的循环将使用 $|S|$ 条边。最多允许 $|S| - 1$ 条内部边禁止了 $S$ 内的循环。
+
+### 等价切割形式
+$$\sum_{i \in S, j \notin S} x_{ij} \ge 1$$
+
+"至少有一条边必须离开子集 $S$" → 确保连通性。
+
+### 例子
+**$S = \{1, 2\}$：** $x_{12} + x_{21} \le 1$。
+**$S = \{0, 1, 8\}$（3个城市）：** $x_{01}+x_{08}+x_{10}+x_{18}+x_{80}+x_{81} \le 2$（6对有序对，最多允许 2 = $|S|-1$）。
+
+### 约束数量问题
+$2^n - 2$ 个真非空子集。对于 $n = 61$：$2 \times 10^{18}$。不可能显式列出。使用懒约束。
+
+## 4. 懒约束生成
+
+### 算法
+1. 仅用度约束求解。
+2. 求解器找到整数解（可能有子环路）。
+3. **回调** 通过 `getSubtours()` 检测子环路。
+4. 对每个检测到的子环路 $S$：动态添加子环路消除约束。
+5. 求解器继续。重复直到单一行程跨越所有 $n$ 个城市。
+
+### Gurobi 语法
+```python
+m.params.LazyConstraints = 1
+
+def eliminateSubtours(model, where):
+    if where == GRB.Callback.MIPSOL:
+        x_val = model.cbGetSolution(x)
+        sequence = [(i,j) for (i,j) in od_pairs if x_val[i,j] > 0.5]
+        subtour_list = getSubtours(sequence)
+        if len(subtour_list) > 1:
+            for S in subtour_list:
+                model.cbLazy(
+                    sum(x[i,j] for i in S for j in S if i!=j) <= len(S) - 1
+                )
+
+m.optimize(eliminateSubtours)
+```
+
+## 5. getSubtours 函数 — 详细跟踪
+
+```python
+def getSubtours(sequence):
+    subtour_list = []
+    unvisited = list(range(n))
+    while len(unvisited) > 0:
+        node = unvisited[0]
+        unvisited.remove(node)
+        subtour = [node]
+        next_node = list(filter(lambda t: t[0]==node, sequence))[0][1]
+        while next_node in unvisited:
+            subtour.append(next_node)
+            unvisited.remove(next_node)
+            next_node = list(filter(lambda t: t[0]==next_node, sequence))[0][1]
+        subtour_list.append(subtour)
+    return subtour_list
+```
+
+**算法：**
+- 选择一个未访问的节点，通过序列跟踪出边。
+- 当你触及一个已访问节点时停止（循环关闭）。
+- 记录为一个子环路；用剩余的未访问节点重复。
+
+### 跟踪例子（练习题 n=9）
+sequence = `[(2,5),(1,8),(3,2),(4,6),(0,1),(7,3),(6,4),(8,0),(5,7)]`
+
+从节点 0 开始：
+- 0 → 1 → 8 → 0。子环路：[0, 1, 8]。从未访问中移除。
+
+选择下一个未访问的（2）：
+- 2 → 5 → 7 → 3 → 2。子环路：[2, 5, 7, 3]。
+
+选择下一个（4）：
+- 4 → 6 → 4。子环路：[4, 6]。
+
+**最终输出：** `[[0,1,8], [2,5,7,3], [4,6]]`。
+
+这是 **高考试相关性** — 可能会被问到。
+
+## 6. 星巴克笔记本 — 单元格演练
+
+西洛杉矶 61 个星巴克位置。谷歌地图出行时间（非对称）。
+
+```python
+starbucks_locations = pd.read_csv("starbucks_address_lat_lon.csv")  # 61 rows
+dist_mat = pd.read_csv("starbucks_dist_mat_full_noNAs.csv")
+# Use "Time" column (seconds)
+```
+
+### 仅用度约束构建模型
+```python
+m = Model()
+x = m.addVars(od_pairs, vtype=GRB.BINARY)
+for i in range(61):
+    m.addConstr(sum(x[i,j] for j in range(61) if j!=i) == 1)
+    m.addConstr(sum(x[j,i] for j in range(61) if j!=i) == 1)
+m.setObjective(sum(time[i,j]*x[i,j] for (i,j) in od_pairs), GRB.MINIMIZE)
+```
+
+### 添加懒回调（参见第 4 节）
+
+### 求解
+```python
+m.params.LazyConstraints = 1
+m.optimize(eliminateSubtours)
+# Optimal tour: 16,816 seconds (~4hr 40min)
+# ~101 lazy SECs added
+# Solve time < 1 second
+```
+
+### 行程重建与可视化
+```python
+sequence = [(i,j) for (i,j) in od_pairs if x[i,j].x > 0.5]
+complete_tour = getSubtours(sequence)[0]  # Single tour
+# Plot on Folium map
+```
+
+## 7. 手工可计算的 4 城市例子
+
+距离矩阵：
+```
+    0   1   2   3
+0   -  10  15  20
+1  10   -   5  12
+2  15   5   -   8
+3  20  12   8   -
+```
+
+**幼稚的（仅度约束）：** 求解器可能返回 $x_{01}=x_{10}=x_{23}=x_{32}=1$。成本 = 36。但两个子环路：{0,1} 和 {2,3}。
+
+**添加子环路消除约束：**
+- $x_{01} + x_{10} \le 1$
+- $x_{23} + x_{32} \le 1$
+
+**重新求解：** 强制 $x_{01}=x_{12}=x_{23}=x_{30}=1$（行程 0→1→2→3→0）。成本 = 10+5+8+20 = 43。有效的单一行程。完成。
+
+## 8. 曼哈顿距离公式
+
+对于仓库问题：$d_{ij} = (1/c)(|u_i - u_j| + |v_i - v_j|)$，其中 $c$ = 速度。
+
+**例子：** 位置 (0,0)、(50,30)、(20,80)，速度 10 m/s。
+- $d_{01} = (50+30)/10 = 8$s
+- $d_{02} = (20+80)/10 = 10$s
+- $d_{12} = (30+50)/10 = 8$s
+
+两个方向相同 → 对称。
+
+## 9. TSP 修改
+
+### A. 在不同位置结束（n+1）
+添加节点 $n+1$，每个位置的距离 $t_{i,n+1}$。添加约束 $x_{n+1, 1} = 1$（所以"行程"从终点包裹回起点；有意义的路径是起点 → ... → $n+1$）。
+
+### B. 哈密顿路径（不同起点、终点）
+- 起始城市：出度 = 1，入度 = 0
+- 终止城市：出度 = 0，入度 = 1
+- 其他城市：入度 = 出度 = 1
+
+### C. 时间窗口（TSPTW）
+添加连续 $t_i$ = 到达时间。约束：
+- $a_i \le t_i \le b_i$（窗口）
+- $t_j \ge t_i + d_{ij} - M(1 - x_{ij})$（大-M 传播）
+
+### D. 车辆容量（CVRP）
+添加流 $f_{ij}$ 变量跟踪负载。$f_{ij} \le Q x_{ij}$。
+
+### E. 多辆车（mTSP）
+$x_{ijk}$ 按车辆索引。每个城市由一辆车访问。
+
+## 10. 练习题 TSP-I（仓库）— 完整演练
+
+### 设置
+- $n-1$ 项 + 起始位置 1
+- 每项在 $(u_i, v_i)$
+- 速度 $c$
+- 距离 $t_{ij} = (1/c)(|u_i - u_j| + |v_i - v_j|)$
+
+### (a) IP 表述
+$$\min \sum_i \sum_{j \ne i} t_{ij} x_{ij}$$
+约束条件：度约束、所有真子集的子环路消除约束、二进制。
+
+### (b) 跟踪 getSubtours
+sequence = `[(2,5),(1,8),(3,2),(4,6),(0,1),(7,3),(6,4),(8,0),(5,7)]`
+输出：`[[0,1,8], [2,5,7,3], [4,6]]`。
+
+### (c) 回调添加的子环路消除约束
+对于 [0,1,8]：$x_{01}+x_{08}+x_{10}+x_{18}+x_{80}+x_{81} \le 2$。
+对于 [2,5,7,3]：12 项，$\le 3$。
+对于 [4,6]：$x_{46} + x_{64} \le 1$。
+
+### (d) 修改：在不同位置结束（n+1）
+添加节点 $n+1$，从坐标得到的距离，设置 $x_{n+1, 1} = 1$。
+
+## 11. 逐步方法
+
+### (a) 从字问题识别 TSP
+单个实体访问多个位置，返回起点，最小化距离。
+
+### (b) 计算距离矩阵
+曼哈顿或欧几里得，根据问题。如果给定速度，则转换为时间。
+
+### (c) 写度约束
+每个城市的入度 = 1，出度 = 1。
+
+### (d) 添加子环路消除约束（对于 $n > 10$ 使用懒回调）
+
+### (e) 跟踪 getSubtours
+选择未访问的，跟踪边，关闭循环，重复。
+
+### (f) 从子环路列表识别子环路消除约束
+对于每个子环路 $S$：$\sum_{i \in S} \sum_{j \in S, j \ne i} x_{ij} \le |S| - 1$。
+
+### (g) 修改为在不同位置结束
+
+## 12. 常见错误
+
+1. **完全忘记子环路消除约束。** 幼稚的表述会产生子环路。
+2. **混淆有向与无向。** 子环路消除约束中既有 $x_{ij}$ 又有 $x_{ji}$。
+3. **子环路消除约束右手边错误。** 是 $|S| - 1$，而非 $|S|$。
+4. **遗漏 $j \ne i$ 限定符。** 排除自环。
+5. **getSubtours 跟踪错误** — 仔细跟踪未访问的。
+6. **回调仅在 MIPSOL 触发，** 不是每个 LP 节点。
+7. **忘记设置 LazyConstraints = 1。**
+8. **单节点"子环路"** 不应生成子环路消除约束（回调检查 $> 1$）。
+9. **TSPTW 中大-M 太小。**
+
+## 13. 考试相关性
+
+考试幻灯片列出 4 种 TSP 问题类型：
+1. **表述 IP**（识别 TSP，写度约束 + 子环路消除约束 + 二进制）。
+2. **为给定序列跟踪 getSubtours**。
+3. **识别回调添加的子环路消除约束**，给定子环路列表。
+4. **修改表述**（在不同位置结束等）。
+
+练习题 TSP-I 涵盖全部 4 种。彻底学习它。
+
+## 14. 迷你练习
+
+**Q1.** 8 个商店 + 中央枢纽。表述 TSP。
+
+$\min \sum t_{ij} x_{ij}$ 约束条件：每个城市度=1，所有子集的子环路消除约束，二进制。
+
+**Q2.** 位置 (20,30) 和 (60,50)，速度 5 m/s。曼哈顿时间？
+
+$d = |40| + |20| = 60$。$t = 60/5 = 12$s。
+
+**Q3.** sequence = `[(0,1),(1,3),(3,0),(2,4),(4,2)]`。getSubtours 输出？
+
+弹出 0：0 → 1 → 3 → 0。[0,1,3]。
+弹出 2：2 → 4 → 2。[2,4]。
+输出：`[[0,1,3], [2,4]]`。
+
+**Q4.** 检测到的子环路 [1,2] 和 [3,4,5] 的子环路消除约束？
+
+对于 {1,2}：$x_{12} + x_{21} \le 1$。
+对于 {3,4,5}：$x_{34}+x_{35}+x_{43}+x_{45}+x_{53}+x_{54} \le 2$。
+
+**Q5.** 修改表述以支持时间窗口 $[a_i, b_i]$。
+
+添加连续 $t_i$，约束 $a_i \le t_i \le b_i$ 和 $t_j \ge t_i + d_{ij} - M(1 - x_{ij})$。
+
+## 15. 速查表
+
+### TSP 表述
+```
+变量：x_ij ∈ {0,1}，对于 i≠j
+目标：min Σ_i Σ_{j≠i} d_ij x_ij
+约束条件：
+  Σ_{j≠i} x_ij = 1  ∀i  (出度)
+  Σ_{j≠i} x_ji = 1  ∀i  (入度)
+  Σ_{i∈S} Σ_{j∈S,j≠i} x_ij ≤ |S|-1  ∀S⊊V, S≠∅  (子环路消除约束)
+  x_ij ∈ {0,1}
+```
+
+### getSubtours 逻辑
+1. 选择未访问节点。
+2. 通过序列跟踪出边。
+3. 在已访问节点处停止（循环关闭）。
+4. 记录子环路，从未访问中移除，重复。
+
+### 懒回调（Gurobi）
+- `m.params.LazyConstraints = 1`
+- 在 `MIPSOL` 回调内：
+  - `model.cbGetSolution(x)`
+  - 查找子环路
+  - 对每个子环路使用 `model.cbLazy(...)`
+
+### 关键提醒
+- 子环路消除约束使用 $x_{ij}$ 和 $x_{ji}$ 两者（有向）。
+- 子环路消除约束的右手边是 $|S| - 1$。
+- $\sum_{i \in S} \sum_{j \in S, j \ne i}$ → 计算每对有向对一次。
+- $|S|$ 个节点 → 最多 $|S|(|S|-1)$ 对有序对 → 上界在 $|S|-1$。
+
+---
+
+## 讲座记录见解 — 超越幻灯片
+
+来自 Prof. Misic 的 5/20 讲座（TSP 介绍）+ 5/27（TSP 继续 + 考试准备）。
+
+### 设置提醒
+
+**星巴克问题：** 从一辆车补充西洛杉矶 61 个星巴克位置。谷歌地图 API 的出行时间是 **非对称的**（单向街道、交通）。
+
+**幼稚的表述失败：** 仅度约束 → 求解器产生多个 **不连通的循环**（子环路）。
+
+### 为什么 getSubtours 演练在考试中 **有保证**
+
+"❗ ***教授的原话：'如果你在考试中遇到这个问题...我会给你这段代码。我期望你能阅读它。而且，如果我问你输出是什么...你应该能够做到。'***"
+
+这是一个 **已确认的考试问题类型**。练习跟踪该函数。
+
+### 手动子环路消除（玩具 4 城市）
+
+没有子环路消除约束：求解器返回 (0→3→0) 和 (1→2→1)。两个不连通循环。
+
+手动添加：
+- $x_{14} + x_{41} \le 1$ — 禁止 1↔4 循环
+- $x_{23} + x_{32} \le 1$ — 禁止 2↔3 循环
+
+添加后：最优值从 **841 → 938**，单一行程 (0→3→2→1→0)。
+
+### 复杂性（为什么懒约束很重要）
+
+$N$ 城市的子集数：$2^N$。
+- $N=10$：约 1,000 个约束
+- $N=20$：约 1,000,000 个约束
+- $N=30$：约 1,000,000,000 个约束
+- $N=61$：$\approx 2.3 \times 10^{18}$
+
+"*不可能提前枚举。*"
+
+### 懒约束算法
+
+1. 不带子环路约束求解 TSP。
+2. 通过 getSubtours() 检查解是否有子环路。
+3. 如果找到子环路，**添加** 消除它们的约束。
+4. 重新求解。
+5. 重复直到单一行程保留。
+
+### 星巴克解决方案统计
+
+- 最优值：**16,816 秒** ≈ 4.67 小时驾驶
+- 只需要 **91 个懒约束**（不是 $2^{61}$！）
+- 在 **< 0.2 秒** 内求解
+
+"*展示了少数约束在实践中足够的 **赌注**。*"
+
+### 当 getSubtours 返回 1 个元素
+
+`len(subtour_list) == 1` ⇒ **不是** 实际的子环路 — 它是 **完整行程**。解是可行的。
+
+### 单次回调中的多个子环路
+
+如果找到 3 个子环路：在一次回调调用中添加 3 个约束。比逐次迭代更高效。
+
+---
+
+# 最终复习课程见解（5/27）
+
+## 考试范围与覆盖 — 已确认
+
+### 考试中有什么
+
+> *Prof. Misic 的 **确切引言**（5/27）：*
+> *"基本上到周末结束的所有内容，我们刚刚完成，所有这些都可以在最终考试中出现。所以从 LP 对偶性到我们刚刚完成的旅行商问题，任何这些主题都可以在考试中出现。"*
+
+**已确认的主题（第 1-8 周）：**
+1. LP 对偶性
+2. 收益管理
+3. 库存 / 新闻贩子
+4. 位置
+5. 品种范围
+6. 定价
+7. 网络流 / 最短路径 / 最小成本
+8. 旅行商问题
+
+### 考试中有什么 **不** 是
+
+> *教授的确切言辞（5/27）：*
+> *"我们现在开始的是列生成，我不会在考试中测试你。"*
+
+**排除的：**
+- 列生成（第 9 周）
+- 匹配问题（第 10 周，器官/肾脏）— 在列生成之后
+
+### 考试结构
+
+- **约 6 道题目，多部分**
+- **不是所有 8 个主题都会被覆盖** — 某些可能被省略
+- 每个主题内有多种问题类型
+
+### 考试后勤
+
+- **非绘图型科学计算器 **必需**（亚马逊上约 15 美元，可退货）
+- 图形计算器 **不允许**
+- 需要它进行数值计算
+- 日期/地点/规则：见邮件 + 教学大纲
+
+## 考试准备指导（5/27）
+
+### 教授说做什么
+
+1. 复习所有你完成的 **家庭作业问题**。
+2. 完成所有 **练习题**。
+3. 注意最终考试准备幻灯片中 **4 个关键周** 的示例问题。
+4. 熟悉每周的表述。
+
+### 直接引言
+
+> *"如果你自己完成了练习题，考试中应该没问题。"*
+
+> *"如果你自己做了家庭作业（不是在晚上 11 点复制给 ChatGPT），你在考试中会没问题。"*
+
+> *"如果你什么都没做...你有两周。"*
+
+### 样本问题类型（给出的直接例子）
+
+**LP 对偶性：**
+- 给定原始 LP，表述对偶。
+- 使用对偶验证解最优性。
+- 解释影子价格。
+- 预测资源数量增加 100 单位时目标值的变化。
+- 理解影子价格给出 **线性近似**。
+
+**其他周：** 在准备幻灯片中列出（Slides_FinalExam.pdf）。
+
+## TSP 特定考试期望（5/27）
+
+### 代码阅读问题 — 已确认
+
+> *"如果你在考试中遇到这个问题，我会给你这段代码。我期望你能阅读它。而且如果我问你输出是什么，你应该能够做到。"*
+
+**你将被给予：** `getSubtours()` 函数代码 + 一个示例输入（边的序列）。
+**你会被问到：** "输出是什么（子环路列表）？"
+
+**练习题中存在类似问题** — 用它来准备。
+
+### 你必须掌握的内容
+
+- `getSubtours()` 如何从解中跟踪边。
+- 它如何识别循环。
+- 输出列表嵌套如何结构化。
+- 边界情况：`len(subtour_list) == 1`（完整有效行程，无需更多子环路消除约束）。
+
+## 关键收获
+
+教授在整个 5/27 讲座上投入了 TSP（除了他标记为不可测试的 W9 介绍）。这表明 TSP 是一个 **高优先级考试主题** — 即使最终考试幻灯片说"如果时间允许"。
+
+子环路消除 + 懒约束生成 + getSubtours 跟踪是掌握的技术创新。
+</script>
+
+<script>
+function renderContent(lang) {
+  const id = (lang === 'zh') ? 'md-zh' : 'md-en';
+  const src = document.getElementById(id).textContent;
+  document.getElementById('content').innerHTML = marked.parse(src);
+  // Swap banner labels too
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    const txt = (lang === 'zh') ? el.dataset.zh : el.dataset.en;
+    // Only update simple text spans (not children)
+    if (el.children.length === 0) el.textContent = txt;
+  });
+  // Re-typeset MathJax
+  setTimeout(() => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([document.getElementById('content')]);
+    }
+  }, 50);
+}
+
+// Initial render based on saved preference
+const initLang = localStorage.getItem('site_lang') || 'en';
+renderContent(initLang);
+
+// Listen for language change events from script.js
+window.addEventListener('langchange', e => renderContent(e.detail));
+</script>
+<script src="script.js"></script>
+</body>
+</html>
