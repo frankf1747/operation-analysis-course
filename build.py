@@ -15,21 +15,23 @@ WEEKS = {
 
 def make_sidebar(current_week):
     items = [
-        ('index.html', '🏠 Dashboard', None),
-        ('strategy.html', '🎯 Exam Strategy', None),
+        ('index.html', '🏠 Dashboard', '🏠 主页', None),
+        ('strategy.html', '🎯 Exam Strategy', '🎯 考试策略', None),
     ]
-    for w, (name, _, _) in WEEKS.items():
-        items.append((f'week{w}.html', f'Week {w} — {name}', w))
+    for w, (name, cn, _) in WEEKS.items():
+        items.append((f'week{w}.html', f'Week {w} — {name}', f'第{w}周 — {cn}', w))
     items += [
-        ('formulas.html', '📐 Formula Sheet', None),
-        ('templates.html', '🧩 Problem Templates', None),
-        ('crash.html', '🚨 Night Before Exam', None),
+        ('formulas.html', '📐 Formula Sheet', '📐 公式表', None),
+        ('templates.html', '🧩 Problem Templates', '🧩 题型模板', None),
+        ('crash.html', '🚨 Night Before Exam', '🚨 考前一晚', None),
     ]
     lines = ['<aside class="sidebar">', '<h1>MGMTMSA 408</h1>',
              '<p class="subtitle">Operations Analytics — Final Review</p>', '<nav>']
     for href, label, w in items:
         cls = ' class="active"' if w == current_week else ''
-        lines.append(f'<a href="{href}"{cls}>{label}</a>')
+        en_attr = html.escape(label_en, quote=True)
+        zh_attr = html.escape(label_zh, quote=True)
+        lines.append(f'<a href="{href}"{cls} data-en="{en_attr}" data-zh="{zh_attr}">{label_en}</a>')
     lines += ['</nav>', '</aside>']
     return '\n'.join(lines)
 
