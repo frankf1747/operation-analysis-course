@@ -6,7 +6,7 @@
 <title>MGMTMSA 408 — 期末复习</title>
 <link rel="stylesheet" href="style.css">
 <script>
-MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };
+MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], processEscapes: true }, options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' }, svg: { fontCache: 'global' } };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 </head>
@@ -99,7 +99,7 @@ MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: {
 <ul class="checklist">
 <li><label><input type="checkbox"> LP对偶:原问题↔对偶问题转换(约束类型 ↔ 变量符号)</label></li>
 <li><label><input type="checkbox"> 弱对偶性 + 互补松弛性</label></li>
-<li><label><input type="checkbox"> 影子价格决策:"以$Y的价格购买更多资源?"</label></li>
+<li><label><input type="checkbox"> 影子价格决策:"以 $Y$ 的价格购买更多资源?"</label></li>
 <li><label><input type="checkbox"> 收益管理的容量控制LP</label></li>
 <li><label><input type="checkbox"> 投标价格规则:当且仅当票价 ≥ 所用资源影子价格之和时接受</label></li>
 <li><label><input type="checkbox"> 报童临界分位数 $F(Q^*) = c_u/(c_u+c_o)$</label></li>

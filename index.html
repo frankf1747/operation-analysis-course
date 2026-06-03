@@ -6,7 +6,7 @@
 <title>MGMTMSA 408 — Final Exam Review</title>
 <link rel="stylesheet" href="style.css">
 <script>
-MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };
+MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], processEscapes: true }, options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' }, svg: { fontCache: 'global' } };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 </head>
@@ -43,7 +43,7 @@ MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: {
 <li><strong>Exam scope:</strong> <span class="hl">Weeks 1–8 only</span>. Prof's exact words: <em>"Everything from LP duality to traveling salesman, all of that can show up in the exam."</em></li>
 <li><strong>Confirmed EXCLUDED:</strong> Column Generation (W9), Matching (W10). Prof: <em>"I will not test you on column generation."</em></li>
 <li><strong>Exam structure:</strong> <span class="hl">~6 questions with multiple parts</span>. Not all 8 topics will be covered — some may be OMITTED.</li>
-<li><strong>Calculator:</strong> Non-graphing scientific calculator REQUIRED (~$15 on Amazon). Graphing NOT allowed.</li>
+<li><strong>Calculator:</strong> Non-graphing scientific calculator REQUIRED (~\$15 on Amazon). Graphing NOT allowed.</li>
 <li><strong>TSP getSubtours code reading is GUARANTEED:</strong> Prof confirmed <em>"I will give you this code... you should be able to read it and tell me what the output is."</em></li>
 </ul>
 </div>
@@ -99,7 +99,7 @@ MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: {
 <ul class="checklist">
 <li><label><input type="checkbox"> LP duality: primal↔dual conversion (constraint type ↔ variable sign)</label></li>
 <li><label><input type="checkbox"> Weak duality + complementary slackness</label></li>
-<li><label><input type="checkbox"> Shadow price decision: "buy more resource at $Y?"</label></li>
+<li><label><input type="checkbox"> Shadow price decision: "buy more resource at $Y$?"</label></li>
 <li><label><input type="checkbox"> Capacity control LP for revenue management</label></li>
 <li><label><input type="checkbox"> Bid-price rule: accept iff fare ≥ sum of shadow prices of used resources</label></li>
 <li><label><input type="checkbox"> Newsvendor critical fractile $F(Q^*) = c_u/(c_u+c_o)$</label></li>

@@ -68,7 +68,12 @@ def make_week_page(week_num):
 <link rel="stylesheet" href="style.css">
 <script>
 MathJax = {{
-  tex: {{ inlineMath: [['$','$'],['\\\\(','\\\\)']], displayMath: [['$$','$$'],['\\\\[','\\\\]']] }},
+  tex: {{
+    inlineMath: [['$','$'],['\\\\(','\\\\)']],
+    displayMath: [['$$','$$'],['\\\\[','\\\\]']],
+    processEscapes: true
+  }},
+  options: {{ ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' }},
   svg: {{ fontCache: 'global' }}
 }};
 </script>
@@ -99,6 +104,30 @@ MathJax = {{
 let __renderInFlight = false;
 let __currentLang = null;
 
+// Protect math regions so marked (Markdown parser) doesn't eat _ and * inside them,
+// and wrap stray $ (currency) so MathJax doesn't pair them as delimiters.
+function __protectMath(src) {{
+  const blocks = [];
+  const ph = i => '@@@MATHBLOCK' + i + '@@@';
+  // First protect any backslash-escaped \$ as literal currency
+  const DOLLAR_PH = '@@@DOLLARLITERAL@@@';
+  src = src.replace(/\\\\\$/g, DOLLAR_PH);
+  // Display math: $$...$$, \[...\]
+  src = src.replace(/\$\$([\\s\\S]+?)\$\$/g, m => {{ blocks.push(m); return ph(blocks.length - 1); }});
+  src = src.replace(/\\\\\[([\\s\\S]+?)\\\\\]/g, m => {{ blocks.push(m); return ph(blocks.length - 1); }});
+  // Inline math: \(...\)
+  src = src.replace(/\\\\\(([\\s\\S]+?)\\\\\)/g, m => {{ blocks.push(m); return ph(blocks.length - 1); }});
+  // Inline math: $...$ (no whitespace adjacent to either delimiter, content has no $ or newline)
+  src = src.replace(/\$([^\\s$][^$\\n]*?[^\\s$]|[^\\s$])\$/g, m => {{ blocks.push(m); return ph(blocks.length - 1); }});
+  // Any leftover $ is currency → wrap so MathJax skips it
+  src = src.replace(/\$/g, '<span class="tex2jax_ignore">$</span>');
+  src = src.split(DOLLAR_PH).join('<span class="tex2jax_ignore">$</span>');
+  return {{ src, blocks }};
+}}
+function __restoreMath(html, blocks) {{
+  return html.replace(/@@@MATHBLOCK(\\d+)@@@/g, (_, i) => blocks[+i]);
+}}
+
 function renderContent(lang) {{
   // Skip redundant renders for the same language
   if (lang === __currentLang) return;
@@ -106,11 +135,12 @@ function renderContent(lang) {{
   __renderInFlight = true;
 
   const id = (lang === 'zh') ? 'md-zh' : 'md-en';
-  const src = document.getElementById(id).textContent;
+  const rawSrc = document.getElementById(id).textContent;
+  const {{ src: protectedSrc, blocks: __mathBlocks }} = __protectMath(rawSrc);
   const contentEl = document.getElementById('content');
   const scrollY = window.scrollY;
 
-  contentEl.innerHTML = marked.parse(src);
+  contentEl.innerHTML = __restoreMath(marked.parse(protectedSrc), __mathBlocks);
 
   // Swap banner labels
   document.querySelectorAll('[data-en][data-zh]').forEach(el => {{

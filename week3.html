@@ -7,7 +7,12 @@
 <link rel="stylesheet" href="style.css">
 <script>
 MathJax = {
-  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    processEscapes: true
+  },
+  options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' },
   svg: { fontCache: 'global' }
 };
 </script>
@@ -225,7 +230,7 @@ $$E[\min(Q^*, D)] = \int_0^{Q^*} x f(x) dx + Q^* [1 - F(Q^*)]$$
 
 Alternative: $G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$.
 
-**Worked example (coffee, uniform):** $Q^* = 68$, $E[\pi^*] = $352. Full profit:
+**Worked example (coffee, uniform):** $Q^* = 68$, $E[\pi^*]$ = \$352. Full profit:
 $$\pi^* = pE[D] - E[\text{losses}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
 
 ## 12. Step-by-Step Templates
@@ -589,7 +594,7 @@ $$E[\min(Q^*, D)] = \int_0^{Q^*} x f(x) dx + Q^* [1 - F(Q^*)]$$
 
 替代形式:$G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$。
 
-**详细例题(咖啡,均匀分布):** $Q^* = 68$,$E[\pi^*] = $352。完整利润:
+**详细例题(咖啡,均匀分布):** $Q^* = 68$,$E[\pi^*]$ = \$352。完整利润:
 $$\pi^* = pE[D] - E[\text{损失}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
 
 ## 12. 分步模板
@@ -782,6 +787,30 @@ Domenic's Spider Foods 连锁店,83 家门店,11 种橙汁产品。人口统计:
 let __renderInFlight = false;
 let __currentLang = null;
 
+// Protect math regions so marked (Markdown parser) doesn't eat _ and * inside them,
+// and wrap stray $ (currency) so MathJax doesn't pair them as delimiters.
+function __protectMath(src) {
+  const blocks = [];
+  const ph = i => '@@@MATHBLOCK' + i + '@@@';
+  // First protect any backslash-escaped \$ as literal currency
+  const DOLLAR_PH = '@@@DOLLARLITERAL@@@';
+  src = src.replace(/\\\$/g, DOLLAR_PH);
+  // Display math: $$...$$, \[...\]
+  src = src.replace(/\$\$([\s\S]+?)\$\$/g, m => { blocks.push(m); return ph(blocks.length - 1); });
+  src = src.replace(/\\\[([\s\S]+?)\\\]/g, m => { blocks.push(m); return ph(blocks.length - 1); });
+  // Inline math: \(...\)
+  src = src.replace(/\\\(([\s\S]+?)\\\)/g, m => { blocks.push(m); return ph(blocks.length - 1); });
+  // Inline math: $...$ (no whitespace adjacent to either delimiter, content has no $ or newline)
+  src = src.replace(/\$([^\s$][^$\n]*?[^\s$]|[^\s$])\$/g, m => { blocks.push(m); return ph(blocks.length - 1); });
+  // Any leftover $ is currency → wrap so MathJax skips it
+  src = src.replace(/\$/g, '<span class="tex2jax_ignore">$</span>');
+  src = src.split(DOLLAR_PH).join('<span class="tex2jax_ignore">$</span>');
+  return { src, blocks };
+}
+function __restoreMath(html, blocks) {
+  return html.replace(/@@@MATHBLOCK(\d+)@@@/g, (_, i) => blocks[+i]);
+}
+
 function renderContent(lang) {
   // Skip redundant renders for the same language
   if (lang === __currentLang) return;
@@ -789,11 +818,12 @@ function renderContent(lang) {
   __renderInFlight = true;
 
   const id = (lang === 'zh') ? 'md-zh' : 'md-en';
-  const src = document.getElementById(id).textContent;
+  const rawSrc = document.getElementById(id).textContent;
+  const { src: protectedSrc, blocks: __mathBlocks } = __protectMath(rawSrc);
   const contentEl = document.getElementById('content');
   const scrollY = window.scrollY;
 
-  contentEl.innerHTML = marked.parse(src);
+  contentEl.innerHTML = __restoreMath(marked.parse(protectedSrc), __mathBlocks);
 
   // Swap banner labels
   document.querySelectorAll('[data-en][data-zh]').forEach(el => {

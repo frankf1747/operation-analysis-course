@@ -174,7 +174,7 @@ $$E[\min(Q^*, D)] = \int_0^{Q^*} x f(x) dx + Q^* [1 - F(Q^*)]$$
 
 Alternative: $G(Q^*) = (p-c)Q^* - p \int_0^{Q^*} F(x) dx$.
 
-**Worked example (coffee, uniform):** $Q^* = 68$, $E[\pi^*] = $352. Full profit:
+**Worked example (coffee, uniform):** $Q^* = 68$, $E[\pi^*]$ = \$352. Full profit:
 $$\pi^* = pE[D] - E[\text{losses}] = 8 \cdot 50 - 48 = 400 - 48 = 352$$
 
 ## 12. Step-by-Step Templates

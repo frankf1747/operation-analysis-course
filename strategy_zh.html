@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>考试策略 | MGMTMSA 408</title>
 <link rel="stylesheet" href="style.css">
-<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };</script>
+<script>MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], processEscapes: true }, options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' }, svg: { fontCache: 'global' } };</script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 </head>
 <body>
@@ -61,7 +61,7 @@
 <tr><td><strong>阅读 Python 代码</strong></td><td>TSP(getSubtours),可能涉及收益管理/报童</td><td>“预测对该序列调用 getSubtours 的输出。”</td></tr>
 <tr><td><strong>最优性解读</strong></td><td>对偶</td><td>“此原始解是否最优?为什么?”</td></tr>
 <tr><td><strong>上界论证</strong></td><td>商品组合、收益管理、LP 松弛</td><td>“在不求解 IP 的情况下,给出一个上界。”</td></tr>
-<tr><td><strong>决策(是否多购入 X?)</strong></td><td>对偶、网络流</td><td>“是否应以 $0.02/克 多购入面粉?”</td></tr>
+<tr><td><strong>决策(是否多购入 X?)</strong></td><td>对偶、网络流</td><td>“是否应以 \$0.02/克 多购入面粉?”</td></tr>
 </table>
 
 <h2>题型模式(直接来自教授的幻灯片)</h2>
