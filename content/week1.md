@@ -215,14 +215,18 @@ slack_values = [butter_constr.slack, flour_constr.slack, sugar_constr.slack]
 ### Worked conversion (max primal)
 $$\max 4x_1 + 5x_2 \;\text{s.t.}\; x_1 + 2x_2 \le 10,\; -x_1 + x_2 \ge 2,\; x_1 \ge 0,\; x_2 \text{ free}$$
 
-Apply max rules:
-- Constraint 1 (≤): dual var $p_1 \le 0$
-- Constraint 2 (≥): dual var $p_2 \ge 0$
-- Variable 1 (≥0): dual constraint $p_1 - p_2 \le 4$
+Apply max rules (flip every sign from the min-primal table):
+- Constraint 1 (≤): dual var $p_1 \ge 0$
+- Constraint 2 (≥): dual var $p_2 \le 0$
+- Variable 1 (≥0): dual constraint $p_1 - p_2 \ge 4$
 - Variable 2 (free): dual constraint $2p_1 + p_2 = 5$
 
 **Dual:**
-$$\min 10p_1 + 2p_2 \;\text{s.t.}\; p_1 - p_2 \le 4,\; 2p_1 + p_2 = 5,\; p_1 \le 0, p_2 \ge 0$$
+$$\min 10p_1 + 2p_2 \;\text{s.t.}\; p_1 - p_2 \ge 4,\; 2p_1 + p_2 = 5,\; p_1 \ge 0, p_2 \le 0$$
+
+**Sign check:** $p_1 \ge 0$ because constraint 1 is ≤, and relaxing a ≤ constraint (raising its RHS) **enlarges** the feasible region of a max — so the shadow price is non-negative. $p_2 \le 0$ because constraint 2 is ≥, and relaxing a ≥ constraint **shrinks** the feasible region of a max — shadow price is non-positive. Variable $x_2$ free → dual constraint is an equality.
+
+**Strong-duality check:** Primal optimum at $(x_1, x_2) = (2, 4)$ (both constraints tight), objective $= 4(2)+5(4) = 28$. Solving the dual's tight equations $2p_1 + p_2 = 5$ and $p_1 - p_2 = 4$ gives $p_1 = 3, p_2 = -1$, which satisfy $p_1 \ge 0, p_2 \le 0$. Dual objective $= 10(3) + 2(-1) = 28$ ✓ — strong duality holds, both optimal.
 
 ## 6. Step-by-Step Methods
 
