@@ -563,3 +563,71 @@ details[open] summary {
 }
 
 /* (Google Translate widget removed — now using pre-translated content files) */
+
+/* ====== HIGHLIGHTER ====== */
+.hl-y {
+  background-color: rgba(255, 230, 0, 0.55);
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.hl-g {
+  background-color: rgba(134, 220, 150, 0.65);
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.hl-y:hover, .hl-g:hover {
+  outline: 1px dashed rgba(0,0,0,0.4);
+}
+
+.hl-popup {
+  position: absolute;
+  display: none;
+  background: #1f2937;
+  padding: 6px 8px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  z-index: 10000;
+  gap: 8px;
+  align-items: center;
+}
+.hl-popup.visible { display: inline-flex; }
+.hl-popup::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+  border-bottom-width: 0;
+}
+.hl-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s ease;
+}
+.hl-swatch:hover { transform: scale(1.15); }
+.hl-swatch.yellow { background: #ffe066; }
+.hl-swatch.green { background: #86dc96; }
+.hl-popup .hl-remove {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: #e5484d;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.hl-popup .hl-remove:hover { transform: scale(1.15); }
