@@ -22,6 +22,50 @@ function isWeekPage() {
   return /^week[1-8](_zh)?\.html$/.test(getCurrentFile());
 }
 
+// ====== Per-language scroll memory ======
+// Each (page, language) keeps its own scroll position so toggling back lands you
+// where you were on that side, not where you currently are on the other side.
+function __scrollKey(lang) {
+  const file = getCurrentFile();
+  // Week pages share a URL across languages → namespace by language.
+  // Non-week pages have distinct _zh.html URLs already → URL alone is enough.
+  if (isWeekPage()) return 'scroll_' + file + '_' + (lang || (localStorage.getItem('site_lang') || 'en'));
+  return 'scroll_' + file;
+}
+function saveScrollNow(lang) {
+  try { localStorage.setItem(__scrollKey(lang), String(Math.round(window.scrollY))); } catch (e) {}
+}
+function getSavedScroll(lang) {
+  try {
+    const v = localStorage.getItem(__scrollKey(lang));
+    const n = v ? parseInt(v, 10) : 0;
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  } catch (e) { return 0; }
+}
+function restoreSavedScroll() {
+  const y = getSavedScroll();
+  if (y > 0) {
+    // Use instant behavior so we don't animate a jump on every page load.
+    try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); }
+    catch (e) { window.scrollTo(0, y); }
+  }
+}
+let __scrollGuardUntil = 0;
+function guardScrollSaves(ms) { __scrollGuardUntil = Date.now() + (ms || 0); }
+(function initScrollMemory() {
+  let timer = null;
+  window.addEventListener('scroll', () => {
+    if (Date.now() < __scrollGuardUntil) return; // skip saves during language transition
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (Date.now() < __scrollGuardUntil) return;
+      saveScrollNow();
+    }, 150);
+  }, { passive: true });
+  // Also save on page-hide so a navigation away doesn't lose the latest position.
+  window.addEventListener('pagehide', () => saveScrollNow());
+})();
+
 // ====== Language toggle (floating FAB) ======
 function injectLangToggle() {
   const btn = document.createElement('button');
@@ -37,14 +81,35 @@ function injectLangToggle() {
   btn.addEventListener('click', () => {
     const current = localStorage.getItem('site_lang') || 'en';
     const next = (current === 'en') ? 'zh' : 'en';
+
+    // Capture current scroll under the current language BEFORE swapping.
+    // The debounced scroll listener may not have run yet for the latest position.
+    saveScrollNow(current);
+
+    // Block the scroll listener from overwriting either saved position while the
+    // content swap, MathJax typeset, and renderContent's own scroll restore play out.
+    guardScrollSaves(4000);
+
     localStorage.setItem('site_lang', next);
 
     if (isWeekPage()) {
+      // Pre-scroll to where the new language was last left.
+      // renderContent (in the inline week-page script) captures window.scrollY
+      // synchronously when langchange fires, so we must scroll BEFORE applyWeekLang.
+      // Use behavior: 'instant' — the site sets html { scroll-behavior: smooth }
+      // globally, which would make the synchronous scrollY read pick up the OLD
+      // position and renderContent's finish callback would scroll us back there.
+      const targetY = getSavedScroll(next);
+      try { window.scrollTo({ top: targetY, left: 0, behavior: 'instant' }); }
+      catch (e) { window.scrollTo(0, targetY); }
+
       // Toggle clicks DO need to fire the event so content swaps
       applyWeekLang(next, true);
       adjustSidebarLinks(next);
       btn.querySelector('.lang-label').textContent = (next === 'en') ? '中文' : 'English';
     } else {
+      // Non-week pages: scroll for the OLD url is already saved above.
+      // After navigation, the new page's DOMContentLoaded will restore from its own key.
       const file = getCurrentFile();
       let target;
       if (next === 'zh') {
@@ -421,4 +486,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const lang = localStorage.getItem('site_lang') || 'en';
   adjustSidebarLinks(lang);
   syncLangOnLoad();
+
+  // Restore per-language scroll position once layout has settled. For week
+  // pages the inline renderContent runs first; on a fresh load it sees
+  // scrollY=0 and doesn't fight us. We wait briefly so MathJax has typeset
+  // and final layout height is known (otherwise scrollTo may clamp).
+  // Disable browser-driven scroll restoration so our value wins on back/forward.
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+  setTimeout(restoreSavedScroll, 300);
+  setTimeout(restoreSavedScroll, 1500);
 });
